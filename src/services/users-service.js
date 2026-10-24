@@ -97,3 +97,49 @@ export async function loginUser({ email, password }) {
 
   return token;
 }
+
+/**
+ * Mengambil data user yang sedang login berdasarkan token session
+ * @param {string} token - Token UUID dari session
+ * @returns {Promise<object>}
+ */
+export async function getCurrentUser(token) {
+  // 1. Cari token di tabel sessions
+  const [session] = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.token, token))
+    .limit(1);
+
+  if (!session) {
+    const error = new Error("Unauthorized");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  // 2. Ambil data user yang berelasi
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      time: users.time,
+    })
+    .from(users)
+    .where(eq(users.id, session.userId))
+    .limit(1);
+
+  if (!user) {
+    const error = new Error("Unauthorized");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  // 3. Return data sesuai format kontrak (petakan time -> created_at)
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    created_at: user.time,
+  };
+}

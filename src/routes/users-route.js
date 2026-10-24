@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { registerUser, loginUser } from "../services/users-service.js";
+import { registerUser, loginUser, getCurrentUser } from "../services/users-service.js";
 
 export const usersRoute = new Elysia({ prefix: "/api/users" })
   .onError(({ code, error, set, path }) => {
@@ -8,6 +8,14 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       set.status = error.statusCode || (code === "VALIDATION" ? 400 : 401);
       return {
         error: "Email atau password salah",
+      };
+    }
+
+    // Khusus endpoint /current, response error Unauthorized
+    if (path.endsWith("/current")) {
+      set.status = error.statusCode || 401;
+      return {
+        error: "Unauthorized",
       };
     }
 
@@ -47,6 +55,38 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       }),
     }
   )
+  .get("/current", async ({ headers, set }) => {
+    try {
+      const authHeader = headers["authorization"] || headers["Authorization"];
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        set.status = 401;
+        return {
+          error: "Unauthorized",
+        };
+      }
+
+      const token = authHeader.substring(7).trim();
+      if (!token) {
+        set.status = 401;
+        return {
+          error: "Unauthorized",
+        };
+      }
+
+      const user = await getCurrentUser(token);
+
+      set.status = 200;
+      return {
+        data: user,
+      };
+    } catch (error) {
+      set.status = error.statusCode || 401;
+      return {
+        error: "Unauthorized",
+      };
+    }
+  })
   .post(
     "/",
     async ({ body, set }) => {
