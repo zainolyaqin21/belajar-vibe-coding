@@ -1,0 +1,25 @@
+{
+  "name": "belajar-vibe-coding",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.js",
+    "start": "bun src/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "drizzle-kit check"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.4",
+    "elysia": "^1.4.30",
+    "mysql2": "^3.24.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.11"
+  }
+}
