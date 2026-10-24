@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { testDbConnection } from "./db/index.js";
+import { userRoutes } from "./routes/user.route.js";
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -17,6 +18,7 @@ const app = new Elysia()
       database: dbStatus,
     };
   })
+  .use(userRoutes)
   .listen(port);
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);
