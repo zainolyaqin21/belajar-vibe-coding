@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { createPlant, getAllPlants } from "../services/plants-service.js";
+import { createPlant, getAllPlants, updatePlant } from "../services/plants-service.js";
 
 export const plantsRoute = new Elysia({ prefix: "/api/plants" })
   .onError(({ code, error, set }) => {
@@ -71,7 +71,57 @@ export const plantsRoute = new Elysia({ prefix: "/api/plants" })
         message: error.message || "Gagal mengambil data tanaman",
       };
     }
-  });
+  })
+  .put(
+    "/:id",
+    async ({ params, body, set }) => {
+      try {
+        const id = Number(params.id);
+        const { name, tanggal } = body;
+
+        const updated = await updatePlant(id, { name, tanggal });
+
+        set.status = 200;
+        return {
+          success: true,
+          message: "Tanaman berhasil diperbarui",
+          data: updated,
+        };
+      } catch (error) {
+        if (error.statusCode === 404) {
+          set.status = 404;
+          return {
+            success: false,
+            error: error.message || "Tanaman tidak ditemukan",
+          };
+        }
+
+        set.status = error.statusCode || 500;
+        return {
+          success: false,
+          message: error.message || "Gagal memperbarui data tanaman",
+        };
+      }
+    },
+    {
+      params: t.Object({
+        id: t.Numeric({
+          description: "ID tanaman yang akan diperbarui",
+        }),
+      }),
+      body: t.Object({
+        name: t.String({
+          minLength: 1,
+          maxLength: 255,
+          description: "Nama baru tanaman",
+        }),
+        tanggal: t.String({
+          minLength: 1,
+          description: "Tanggal baru penanaman / tracking",
+        }),
+      }),
+    }
+  );
 
 // Alias untuk menjaga backward compatibility
 export const plantRoute = plantsRoute;
