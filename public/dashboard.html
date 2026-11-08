@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-zinc-950 text-zinc-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard &mdash; Belajar Vibe Coding</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts Inter / Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // Frontend Middleware / Auth Guard
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      window.location.replace('/index.html');
+    }
+
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981', // Emerald primary
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .bg-grid-pattern {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    @keyframes spin-slow {
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-slow 0.8s linear infinite;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-brand-500/20 selection:text-brand-300">
+
+  <!-- ======================================================== -->
+  <!-- NAVBAR HEADER -->
+  <!-- ======================================================== -->
+  <header class="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-zinc-950 font-bold shadow-md shadow-brand-500/20">
+          <i data-lucide="sparkles" class="h-4 w-4 stroke-[2.5]"></i>
+        </div>
+        <div>
+          <span class="text-base font-semibold tracking-tight text-white">VibeCoding</span>
+          <span class="ml-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-400">Dashboard</span>
+        </div>
+      </div>
+
+      <!-- Action Button Logout -->
+      <div class="flex items-center gap-3">
+        <button
+          id="logoutBtn"
+          class="inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/80 px-3.5 py-1.5 text-xs sm:text-sm font-medium text-zinc-300 shadow-sm transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white active:scale-95 disabled:opacity-50"
+        >
+          <span id="logoutSpinner" class="hidden">
+            <i data-lucide="loader-2" class="h-4 w-4 animate-spin-custom"></i>
+          </span>
+          <i id="logoutIcon" data-lucide="log-out" class="h-4 w-4 text-rose-400"></i>
+          <span id="logoutText">Logout</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- MAIN CONTENT AREA -->
+  <!-- ======================================================== -->
+  <main class="relative flex-1 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
+
+    <div class="relative mx-auto max-w-4xl space-y-6">
+      
+      <!-- Notification Banner -->
+      <div id="alertBox" class="hidden rounded-lg border px-4 py-3 text-sm transition-all duration-200">
+        <div class="flex items-center gap-2.5">
+          <i id="alertIcon" data-lucide="alert-circle" class="h-4 w-4 shrink-0"></i>
+          <span id="alertMessage" class="flex-1 text-xs sm:text-sm font-medium"></span>
+        </div>
+      </div>
+
+      <!-- Welcome Banner Card -->
+      <div class="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950 p-6 sm:p-8 shadow-xl backdrop-blur-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-400">
+              <span class="h-2 w-2 rounded-full bg-brand-400 animate-pulse"></span>
+              Sesi Autentikasi Aktif
+            </div>
+            <h1 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Selamat Datang, <span id="welcomeUserName" class="text-brand-400">Pengguna</span>!
+            </h1>
+            <p class="mt-1 text-sm text-zinc-400">
+              Anda berhasil masuk ke sistem yang terproteksi dengan session token UUID.
+            </p>
+          </div>
+          <div class="shrink-0 flex items-center">
+            <div class="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-brand-400 shadow-inner">
+              <i data-lucide="shield-check" class="h-8 w-8 stroke-[1.75]"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Profile & System Status Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Profile Card -->
+        <div class="md:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 shadow-sm">
+          <h2 class="text-base font-semibold text-white flex items-center gap-2">
+            <i data-lucide="user" class="h-4 w-4 text-brand-400"></i>
+            Informasi Profil User
+          </h2>
+          <p class="mt-1 text-xs text-zinc-500">
+            Data diambil secara real-time dari endpoint <code class="text-zinc-300 font-mono">GET /api/users/current</code>.
+          </p>
+
+          <!-- Loading Skeleton -->
+          <div id="profileLoading" class="mt-6 space-y-4">
+            <div class="h-4 w-3/4 bg-zinc-800/60 rounded animate-pulse"></div>
+            <div class="h-4 w-1/2 bg-zinc-800/60 rounded animate-pulse"></div>
+            <div class="h-4 w-2/3 bg-zinc-800/60 rounded animate-pulse"></div>
+          </div>
+
+          <!-- Profile Details Table/List -->
+          <div id="profileDetails" class="mt-6 hidden divide-y divide-zinc-800/80 border-t border-zinc-800/80 text-sm">
+            <div class="py-3 flex justify-between">
+              <span class="text-zinc-400">Nama Lengkap</span>
+              <span id="profileName" class="font-medium text-white">-</span>
+            </div>
+            <div class="py-3 flex justify-between">
+              <span class="text-zinc-400">Alamat Email</span>
+              <span id="profileEmail" class="font-medium text-white">-</span>
+            </div>
+            <div class="py-3 flex justify-between">
+              <span class="text-zinc-400">User ID</span>
+              <span id="profileId" class="font-mono text-zinc-300">-</span>
+            </div>
+            <div class="py-3 flex justify-between">
+              <span class="text-zinc-400">Terdaftar Sejak</span>
+              <span id="profileCreatedAt" class="text-zinc-300">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Status Card -->
+        <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h2 class="text-base font-semibold text-white flex items-center gap-2">
+              <i data-lucide="activity" class="h-4 w-4 text-brand-400"></i>
+              Status Keamanan
+            </h2>
+            <div class="mt-4 space-y-3 text-xs">
+              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+                <div class="text-zinc-500 uppercase tracking-wider text-[10px]">Token Storage</div>
+                <div class="mt-1 font-mono text-zinc-300 truncate">localStorage: auth_token</div>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+                <div class="text-zinc-500 uppercase tracking-wider text-[10px]">Auth Type</div>
+                <div class="mt-1 font-medium text-brand-400">Bearer Token Header</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-zinc-800/80 mt-4 text-[11px] text-zinc-500">
+            Koneksi aktif ke Bun &bull; ElysiaJS
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT: Auth Guard, Fetch Current User, and Logout -->
+  <!-- ======================================================== -->
+  <script>
+    lucide.createIcons();
+
+    const welcomeUserName = document.getElementById('welcomeUserName');
+    const profileLoading = document.getElementById('profileLoading');
+    const profileDetails = document.getElementById('profileDetails');
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const profileId = document.getElementById('profileId');
+    const profileCreatedAt = document.getElementById('profileCreatedAt');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const logoutSpinner = document.getElementById('logoutSpinner');
+    const logoutIcon = document.getElementById('logoutIcon');
+    const logoutText = document.getElementById('logoutText');
+    const alertBox = document.getElementById('alertBox');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertMessage = document.getElementById('alertMessage');
+
+    function showAlert(type, message) {
+      alertBox.classList.remove('hidden', 'border-rose-900/50', 'bg-rose-950/40', 'text-rose-300', 'border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
+      
+      if (type === 'error') {
+        alertBox.classList.add('border-rose-900/50', 'bg-rose-950/40', 'text-rose-300');
+        alertIcon.setAttribute('data-lucide', 'alert-circle');
+      } else {
+        alertBox.classList.add('border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
+        alertIcon.setAttribute('data-lucide', 'check-circle-2');
+      }
+      alertMessage.textContent = message;
+      lucide.createIcons();
+    }
+
+    // Ambil data profil user saat ini
+    async function loadCurrentUser() {
+      const authToken = localStorage.getItem('auth_token');
+      if (!authToken) {
+        window.location.replace('/index.html');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/users/current', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          // Token tidak valid atau sesi kadaluarsa
+          localStorage.removeItem('auth_token');
+          window.location.replace('/index.html');
+          return;
+        }
+
+        const result = await response.json();
+        const user = result.data;
+
+        // Render data user
+        welcomeUserName.textContent = user.name || 'Pengguna';
+        profileName.textContent = user.name || '-';
+        profileEmail.textContent = user.email || '-';
+        profileId.textContent = `#${user.id || '-'}`;
+        profileCreatedAt.textContent = user.created_at ? new Date(user.created_at).toLocaleString('id-ID') : '-';
+
+        profileLoading.classList.add('hidden');
+        profileDetails.classList.remove('hidden');
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+        showAlert('error', 'Gagal memuat profil pengguna dari server.');
+      }
+    }
+
+    // Aksi Logout
+    logoutBtn.addEventListener('click', async () => {
+      const authToken = localStorage.getItem('auth_token');
+      logoutBtn.disabled = true;
+      logoutSpinner.classList.remove('hidden');
+      logoutIcon.classList.add('hidden');
+      logoutText.textContent = 'Memproses...';
+      lucide.createIcons();
+
+      if (authToken) {
+        try {
+          await fetch('/api/users/logout', {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${authToken}`
+            }
+          });
+        } catch (err) {
+          console.warn('Logout network request warning:', err);
+        }
+      }
+
+      // Bersihkan session di client dan redirect
+      localStorage.removeItem('auth_token');
+      window.location.replace('/index.html');
+    });
+
+    // Jalankan pengambilan profil
+    loadCurrentUser();
+  </script>
+</body>
+</html>
+
