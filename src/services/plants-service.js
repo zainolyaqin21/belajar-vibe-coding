@@ -138,4 +138,35 @@ export async function updatePlant(id, { name, tanggal }) {
   return updatedPlant;
 }
 
+/**
+ * Menghapus data tanaman berdasarkan ID
+ * @param {number} id - ID tanaman yang akan dihapus
+ * @returns {Promise<void>}
+ */
+export async function deletePlant(id) {
+  const numericId = Number(id);
+  if (!numericId || isNaN(numericId)) {
+    const error = new Error("ID tanaman tidak valid");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 1. Cek apakah record tanaman dengan id tersebut ada
+  const [existingPlant] = await db
+    .select()
+    .from(plants)
+    .where(eq(plants.id, numericId))
+    .limit(1);
+
+  if (!existingPlant) {
+    const error = new Error("Tanaman tidak ditemukan");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // 2. Eksekusi penghapusan data
+  await db.delete(plants).where(eq(plants.id, numericId));
+}
+
+
 
