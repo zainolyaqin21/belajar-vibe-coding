@@ -4,31 +4,16 @@ Buatkan issue.md yang berisi perencanaan untuk nanti di implementasikan oleh jun
 
 Isi dari planning nya adalah sebagai berikut :
 
-buat tabel sessions:
+buatkan api untuk log out user 
 
-* id integer auto increment
-* token varchar 255 not null (isinya UUID untuk token user yang login)
-* user_id integer (FK ke tabel users)
-* created_at timestamp default current_timestamp
-
-buatkan API untuk registrasi login user
-
-Endpoint : POST /api/users/login
+Endpoint : delete/api/user/logout
 
 Request Body 
-
-json
-{
-    "email" : "eko@localhost",
-    "password" : "rahasia"
-}
-
-
 Response Body (Success) :
 
 json
 {
-    "data" : "token"
+    "data" : "ok"
 }
 
 
@@ -36,7 +21,7 @@ Response Body (Error) :
 
 json
 {
-    "error" : "Email atau password salah"
+    "error" : "unauthorized"
 }
 
 

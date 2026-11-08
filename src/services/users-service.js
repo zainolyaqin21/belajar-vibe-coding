@@ -143,3 +143,27 @@ export async function getCurrentUser(token) {
     created_at: user.time,
   };
 }
+
+/**
+ * Logout user dengan menghapus session token dari database
+ * @param {string} token - Token UUID dari session
+ * @returns {Promise<void>}
+ */
+export async function logoutUser(token) {
+  // 1. Cek apakah session ada di database
+  const [session] = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.token, token))
+    .limit(1);
+
+  if (!session) {
+    const error = new Error("unauthorized");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  // 2. Hapus session dari database
+  await db.delete(sessions).where(eq(sessions.token, token));
+}
+

@@ -1,8 +1,16 @@
 import { Elysia, t } from "elysia";
-import { registerUser, loginUser, getCurrentUser } from "../services/users-service.js";
+import { registerUser, loginUser, getCurrentUser, logoutUser } from "../services/users-service.js";
 
 export const usersRoute = new Elysia({ prefix: "/api/users" })
   .onError(({ code, error, set, path }) => {
+    // Khusus endpoint /logout, response error unauthorized
+    if (path.endsWith("/logout")) {
+      set.status = error.statusCode || 401;
+      return {
+        error: "unauthorized",
+      };
+    }
+
     // Khusus endpoint /login, response error disesuaikan dengan spesifikasi
     if (path.endsWith("/login")) {
       set.status = error.statusCode || (code === "VALIDATION" ? 400 : 401);
@@ -87,6 +95,38 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       };
     }
   })
+  .delete("/logout", async ({ headers, set }) => {
+    try {
+      const authHeader = headers["authorization"] || headers["Authorization"];
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        set.status = 401;
+        return {
+          error: "unauthorized",
+        };
+      }
+
+      const token = authHeader.substring(7).trim();
+      if (!token) {
+        set.status = 401;
+        return {
+          error: "unauthorized",
+        };
+      }
+
+      await logoutUser(token);
+
+      set.status = 200;
+      return {
+        data: "ok",
+      };
+    } catch (error) {
+      set.status = error.statusCode || 401;
+      return {
+        error: "unauthorized",
+      };
+    }
+  })
   .post(
     "/",
     async ({ body, set }) => {
@@ -139,3 +179,44 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
 
 // Alias untuk menjaga backward compatibility
 export const userRoutes = usersRoute;
+
+// Sub-route untuk mendukung endpoint /api/user/logout sesuai issue spesifikasi
+export const userRoute = new Elysia({ prefix: "/api/user" })
+  .onError(({ error, set }) => {
+    set.status = error.statusCode || 401;
+    return {
+      error: "unauthorized",
+    };
+  })
+  .delete("/logout", async ({ headers, set }) => {
+    try {
+      const authHeader = headers["authorization"] || headers["Authorization"];
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        set.status = 401;
+        return {
+          error: "unauthorized",
+        };
+      }
+
+      const token = authHeader.substring(7).trim();
+      if (!token) {
+        set.status = 401;
+        return {
+          error: "unauthorized",
+        };
+      }
+
+      await logoutUser(token);
+
+      set.status = 200;
+      return {
+        data: "ok",
+      };
+    } catch (error) {
+      set.status = error.statusCode || 401;
+      return {
+        error: "unauthorized",
+      };
+    }
+  });
