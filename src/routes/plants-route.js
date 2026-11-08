@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { createPlant, getAllPlants, updatePlant } from "../services/plants-service.js";
+import { createPlant, getAllPlants, updatePlant, deletePlant } from "../services/plants-service.js";
 
 export const plantsRoute = new Elysia({ prefix: "/api/plants" })
   .onError(({ code, error, set }) => {
@@ -118,6 +118,43 @@ export const plantsRoute = new Elysia({ prefix: "/api/plants" })
         tanggal: t.String({
           minLength: 1,
           description: "Tanggal baru penanaman / tracking",
+        }),
+      }),
+    }
+  )
+  .delete(
+    "/:id",
+    async ({ params, set }) => {
+      try {
+        const id = Number(params.id);
+
+        await deletePlant(id);
+
+        set.status = 200;
+        return {
+          success: true,
+          message: "Tanaman berhasil dihapus",
+        };
+      } catch (error) {
+        if (error.statusCode === 404) {
+          set.status = 404;
+          return {
+            success: false,
+            error: error.message || "Tanaman tidak ditemukan",
+          };
+        }
+
+        set.status = error.statusCode || 500;
+        return {
+          success: false,
+          message: error.message || "Gagal menghapus data tanaman",
+        };
+      }
+    },
+    {
+      params: t.Object({
+        id: t.Numeric({
+          description: "ID tanaman yang akan dihapus",
         }),
       }),
     }
