@@ -3,6 +3,7 @@ import { staticPlugin } from "@elysiajs/static";
 import { testDbConnection } from "./db/index.js";
 import { usersRoute, userRoute } from "./routes/users-route.js";
 import { plantsRoute } from "./routes/plants-route.js";
+import { plantLogsRoute, plantLogsCrudRoute } from "./routes/plant-logs-route.js";
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -34,6 +35,8 @@ const app = new Elysia()
   .use(usersRoute)
   .use(userRoute)
   .use(plantsRoute)
+  .use(plantLogsCrudRoute)
+  .use(plantLogsRoute)
   .listen(port);
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);
