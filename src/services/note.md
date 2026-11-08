@@ -1,30 +1,15 @@
-Buatkan issue.md yang berisi perencanaan untuk nanti di implementasikan oleh junior programmer atau AI model yang lebih murah.
+Buatkan issue.md yang berisi perencanaan proyek Aplikasi Jurnal Pertumbuhan Tanaman (AgriTracker) untuk nanti di implementasikan oleh junior programmer atau AI model yang lebih murah.
 
 💡
 
 Isi dari planning nya adalah sebagai berikut :
 
-buatkan api untuk log out user 
-
-Endpoint : delete/api/user/logout
-
-Request Body 
-Response Body (Success) :
-
-json
-{
-    "data" : "ok"
-}
-
-
-Response Body (Error) :
-
-json
-{
-    "error" : "unauthorized"
-}
-
-
+buatkan aku table baru dimana table tersebut bisa untuk menambahkan tanaman yang akan kita tracker 
+isi dari tabel tersebut ada:
+id int, pk, auto increment.
+name varchar, 255, not null.
+tanggal. date time not null
+created at:time stamp, default, not null
 Struktur Folder di dalam src
 
 * routes : ini berisi routing elysia js
