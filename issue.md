@@ -1,161 +1,131 @@
-# [Feature] Implementasi Antarmuka Pengguna (Frontend UI) Alur Autentikasi
+# [Feature] Perencanaan Skema & API Jurnal Pertumbuhan Tanaman (AgriTracker)
 
 ## 📋 Deskripsi
-Mengembangkan antarmuka pengguna (Frontend UI) statis yang modern dan minimalis untuk alur autentikasi lengkap pada aplikasi, meliputi:
-1. **Login** (`public/index.html`)
-2. **Registrasi Akun** (`public/register.html`)
-3. **Dashboard Terlindungi & Logout** (`public/dashboard.html`)
+Mengembangkan fitur pencatatan dan pelacakan tanaman untuk modul **AgriTracker (Jurnal Pertumbuhan Tanaman)**. Modul ini memungkinkan pengguna untuk menambahkan tanaman baru yang ingin dipantau serta melihat daftar tanaman yang sedang dilacak.
 
-Dokumen ini disusun sebagai panduan high-level bagi Frontend Developer (Junior Programmer atau AI Model) untuk mengimplementasikan antarmuka dan integrasi API tanpa mengubah logika backend yang sudah ada.
+Dokumen ini disusun sebagai panduan arsitektur *high-level* untuk diimplementasikan oleh junior programmer atau AI model dengan mengikuti pola desain (*clean architecture*) yang sudah ada di dalam proyek.
 
 ---
 
-## 🎨 Panduan Desain & Tech Stack
+## 🗄️ Spesifikasi Skema Database (Drizzle ORM)
 
-### 1. Tech Stack
-- **HTML5 Murni** (Semantic & Accessible)
-- **Vanilla JavaScript (ES6+)** (DOM Manipulation & Fetch API)
-- **Tailwind CSS** (via CDN: `https://cdn.tailwindcss.com`)
-- **Lucide Icons** (via CDN/unpkg)
-- **Font**: Sans-serif modern (misal: *Plus Jakarta Sans* atau *Inter*)
+Tambahkan definisi tabel baru pada file skema database (`src/db/schema.js` atau `schema.ts`) dengan nama tabel **`plants`** (atau `tanaman`):
 
-### 2. Vibe & Styling
-- **Tema**: Dark Mode modern, clean, dan monokromatik.
-- **Palet Warna**:
-  - Warna Dasar: `zinc-950` (background utama), `zinc-900` (card/surface), `zinc-800` (border).
-  - Teks: `zinc-100` (primary heading/text), `zinc-400` / `zinc-500` (secondary/muted).
-  - Warna Aksen: **Emerald Green** (`emerald-500` / `#10b981`) untuk tombol utama, focus ring, dan status aktif.
-  - Warna Feedback: `rose-500` / `rose-900` untuk pesan error/gagal.
-- **Komponen Form (shadcn/ui style)**:
-  - Input field dengan sudut `rounded-md`, border halus `border-zinc-800`, dan efek focus ring `focus:ring-2 focus:ring-emerald-500/20`.
-  - Tombol submit dengan transisi hover halus, drop shadow lembut, dan disabled state saat proses loading.
+| Nama Kolom | Tipe Data | Atribut / Constraint | Keterangan |
+| :--- | :--- | :--- | :--- |
+| `id` | Integer / Serial | `PRIMARY KEY`, `AUTO_INCREMENT` | Identifier unik tiap tanaman |
+| `name` | Varchar(255) | `NOT NULL` | Nama tanaman yang dilacak |
+| `tanggal` | DateTime / Timestamp | `NOT NULL` | Tanggal dan waktu mulai tracking/penanaman |
+| `created_at` | Timestamp | `DEFAULT CURRENT_TIMESTAMP`, `NOT NULL` | Waktu data dibuat pada sistem |
+
+> **Catatan Database**: Setelah skema ditambahkan, jalankan perintah migrasi atau sinkronisasi database Drizzle (misal: `bun run db:push` atau `bun run db:generate` & `bun run db:migrate`).
 
 ---
 
-## 🎯 Spesifikasi Halaman & Integrasi API
+## 🎯 Spesifikasi API (HTTP Contract)
 
-### 1. Halaman Login (`public/index.html`)
-* **Tujuan**: Pintu masuk utama pengguna ke dalam sistem.
-* **Komponen & Input**:
-  - Form input: `Email` dan `Password` (disertai tombol toggle lihat password).
-  - Tombol Submit: "Masuk ke Akun" (dengan indikator loading saat request berlangsung).
-  - Alert Box: Kotak notifikasi untuk menampilkan pesan kesalahan.
-  - Navigasi: Link *"Belum punya akun? Daftar"* yang mengarah ke `register.html`.
-* **Integrasi API**:
-  - **Endpoint**: `POST /api/users/login`
-  - **Request Body**:
-    ```json
-    {
-      "email": "user@example.com",
-      "password": "secretpassword"
+### 1. Tambah Tanaman Baru (Create Plant)
+* **Method**: `POST`
+* **Path**: `/api/plants`
+* **Headers**: `Content-Type: application/json`
+* **Request Body**:
+  ```json
+  {
+    "name": "Tomat Cherry",
+    "tanggal": "2026-11-08T08:00:00Z"
+  }
+  ```
+* **Response Sukses (HTTP 201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Tanaman berhasil ditambahkan ke tracker",
+    "data": {
+      "id": 1,
+      "name": "Tomat Cherry",
+      "tanggal": "2026-11-08T08:00:00.000Z",
+      "created_at": "2026-11-08T15:20:00.000Z"
     }
-    ```
-  - **Skenario Sukses (HTTP 200)**:
-    - Ambil token dari properti respons (`data`).
-    - Simpan ke `localStorage` dengan key `auth_token`.
-    - Redirect pengguna ke `dashboard.html`.
-  - **Skenario Gagal (HTTP 400/401)**:
-    - Tampilkan kotak alert berwarna merah dengan pesan error yang sesuai dari backend.
+  }
+  ```
+* **Response Error Validasi (HTTP 400 Bad Request)**:
+  ```json
+  {
+    "success": false,
+    "message": "Validasi gagal: nama dan tanggal wajib diisi"
+  }
+  ```
 
 ---
 
-### 2. Halaman Registrasi (`public/register.html`)
-* **Tujuan**: Form pendaftaran akun baru bagi pengguna.
-* **Komponen & Input**:
-  - Form input: `Nama Lengkap`, `Email`, dan `Password`.
-  - Tombol Submit: "Daftar Akun" (dengan status loading saat submit).
-  - Alert Box: Untuk pesan error/validasi dari server.
-  - Navigasi: Link *"Sudah punya akun? Masuk"* yang mengarah ke `index.html`.
-* **Integrasi API**:
-  - **Endpoint**: `POST /api/users` (atau alias `/api/users/register`)
-  - **Request Body**:
-    ```json
-    {
-      "name": "Budi Santoso",
-      "email": "budi@example.com",
-      "password": "password123"
-    }
-    ```
-  - **Skenario Sukses (HTTP 201)**:
-    - Tampilkan notifikasi berhasil mendaftar.
-    - Redirect pengguna ke halaman login (`index.html`) setelah jeda singkat (misal 1 detik).
-  - **Skenario Gagal (HTTP 400/409)**:
-    - Tampilkan kotak alert merah berisi pesan kesalahan (misal: "Email sudah digunakan" atau kesalahan validasi).
+### 2. Ambil Daftar Tanaman (Get All Plants)
+* **Method**: `GET`
+* **Path**: `/api/plants`
+* **Response Sukses (HTTP 200 OK)**:
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "name": "Tomat Cherry",
+        "tanggal": "2026-11-08T08:00:00.000Z",
+        "created_at": "2026-11-08T15:20:00.000Z"
+      }
+    ]
+  }
+  ```
 
 ---
 
-### 3. Halaman Dashboard & Logout (`public/dashboard.html`)
-* **Tujuan**: Halaman beranda terlindungi (hanya bisa diakses jika memiliki sesi aktif).
-* **Proteksi Halaman (Client-Side Guard)**:
-  - Sebelum halaman selesai dimuat, periksa `auth_token` di `localStorage`.
-  - Jika token **tidak ada**, langsung tendang (redirect) pengguna ke `index.html`.
-* **Aksi Tampil Profil Pengguna**:
-  - Panggil API `GET /api/users/current` dengan header:
-    ```http
-    Authorization: Bearer <auth_token>
-    ```
-  - Jika token valid: Tampilkan nama, email, dan tanggal bergabung di komponen kartu dashboard.
-  - Jika server merespons `401 Unauthorized`: Bersihkan `auth_token` dari `localStorage` dan redirect ke `index.html`.
-* **Aksi Logout**:
-  - Sediakan tombol "Logout" yang jelas di header atau navigation bar.
-  - Saat diklik:
-    1. Kirim request `DELETE /api/users/logout` (atau `/api/user/logout`) dengan header `Authorization: Bearer <auth_token>`.
-    2. Hapus `auth_token` dari `localStorage`.
-    3. Redirect pengguna kembali ke `index.html`.
+## 📁 Struktur Folder & Konvensi Berkas
 
----
-
-## 📁 Struktur File Target
-
-Semua berkas statis ditempatkan di dalam folder `public`:
+Implementasi harus memisahkan tanggung jawab (Separation of Concerns) ke dalam layer yang sesuai:
 
 ```text
-public/
-├── index.html       # UI Halaman Login (Pintu Masuk)
-├── register.html    # UI Halaman Pendaftaran Akun
-└── dashboard.html   # UI Dashboard Terlindungi & Aksi Logout
+src/
+├── db/
+│   └── schema.js               # Penambahan tabel `plants`
+├── services/
+│   └── plants-service.ts       # Logika bisnis & query database (Drizzle ORM)
+├── routes/
+│   └── plants-route.ts         # Definisi route ElysiaJS, validasi skema TypeBox
+└── index.js                    # Registrasi router plants ke instance Elysia utama
 ```
 
----
+### Tanggung Jawab Tiap Layer:
 
-## 🔄 Alur Navigasi Pengguna (User Flow)
+1. **Services Layer (`src/services/plants-service.ts` / `.js`)**:
+   - Menangani operasi database menggunakan instance Drizzle `db`.
+   - Fungsi untuk menyimpan tanaman baru (misal: `createPlant({ name, tanggal })`).
+   - Fungsi untuk mengambil seluruh daftar tanaman (misal: `getAllPlants()`).
 
-```text
-               [ Belum Punya Akun ]
-[index.html] ------------------------> [register.html]
-  (Login)    <------------------------   (Daftar)
-     |          [ Sudah Punya Akun ]        |
-     |                                      | (Sukses Registrasi)
-     | (Login Sukses)                       v
-     +--------------------------------> [index.html]
-     |
-     v
-[dashboard.html]
-  (Beranda Terlindungi)
-     |
-     | (Klik Logout / Token Expired)
-     v
-[index.html]
-```
+2. **Routes Layer (`src/routes/plants-route.ts` / `.js`)**:
+   - Membuat instance Elysia baru dengan prefix `/api/plants`.
+   - Menggunakan validator TypeBox (`t.Object`) untuk memastikan body request memiliki:
+     - `name`: string, tidak boleh kosong, max 255 karakter.
+     - `tanggal`: string format date-time / date yang valid.
+   - Meneruskan data ke service layer dan memformat response JSON.
+
+3. **Application Entry Point (`src/index.js`)**:
+   - Mendaftarkan `plantsRoute` menggunakan `.use(plantsRoute)`.
 
 ---
 
 ## ✅ Kriteria Penerimaan (Acceptance Criteria)
 
-- [ ] File `public/index.html`, `public/register.html`, dan `public/dashboard.html` tersedia dan dapat diakses melalui browser.
-- [ ] Tampilan konsisten mengusung tema Dark Mode (`zinc-950` / `zinc-900`) dengan aksen `emerald` bergaya *shadcn/ui*.
-- [ ] Form Login berhasil melakukan autentikasi, menyimpan token di `localStorage`, dan mengarahkan ke dashboard.
-- [ ] Form Registrasi berhasil mendaftarkan pengguna baru dan mengarahkan ke halaman login jika sukses.
-- [ ] Error handling berjalan baik: pesan error backend ditampilkan secara visual (alert merah), bukan silent failure.
-- [ ] Halaman `dashboard.html` terlindungi: pengguna yang tidak memiliki token otomatis di-redirect ke halaman login.
-- [ ] Data profil pengguna (`name`, `email`) muncul di `dashboard.html` setelah berhasil login.
-- [ ] Tombol Logout menghapus sesi di server dan browser, lalu mengembalikan user ke halaman login.
-- [ ] Tombol submit memiliki state interaktif (disabled + animasi loading saat request berjalan).
+- [ ] Tabel tanaman terdefinisi di skema Drizzle dan sinkron dengan database MySQL.
+- [ ] Endpoint `POST /api/plants` berhasil menyimpan data tanaman dengan input `name` dan `tanggal`.
+- [ ] Endpoint `POST /api/plants` menolak request jika `name` atau `tanggal` tidak disertakan (mengembalikan HTTP 400).
+- [ ] Endpoint `GET /api/plants` mengembalikan daftar seluruh tanaman yang tersimpan dalam format array JSON.
+- [ ] Kode terisolasi rapi pada `plants-route` dan `plants-service` sesuai konvensi penamaan berkas project.
+- [ ] Router terpasang pada `src/index.js` tanpa merusak endpoint existing lainnya.
 
 ---
 
 ## 💡 Catatan Tambahan untuk Implementor
 
-- Gunakan Vanilla JS murni tanpa build step (tidak memerlukan bundler seperti Vite/Webpack).
-- Pastikan semua panggilan network menangani blok `try...catch` untuk mengantisipasi jaringan down / server offline.
-- Simpan key token secara konsisten dengan nama: `'auth_token'`.
+- Gunakan query builder Drizzle ORM (`db.insert(plants)`, `db.select().from(plants)`) tanpa raw SQL query.
+- Format tanggal dapat menerima format string ISO-8601 (`YYYY-MM-DD` atau `YYYY-MM-DDTHH:mm:ssZ`) dan dikonversi menjadi tipe objek `Date` sebelum disimpan.
+- Berkas dapat menggunakan ekstensi `.ts` atau `.js` sesuai konfigurasi TypeScript / JavaScript ESM proyek saat ini.
+
