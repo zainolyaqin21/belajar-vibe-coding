@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-zinc-950 text-zinc-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Akun &mdash; Belajar Vibe Coding</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts Inter / Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981', // Emerald primary
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .bg-grid-pattern {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    @keyframes spin-slow {
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-slow 0.8s linear infinite;
+    }
+  </style>
+</head>
+<body class="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-zinc-950 selection:bg-brand-500/20 selection:text-brand-300">
+
+  <!-- Ambient Glow & Subtle Pattern -->
+  <div class="fixed inset-0 bg-grid-pattern pointer-events-none opacity-50"></div>
+  <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- Single Centered Container (No Split Screen) -->
+  <div class="relative z-10 w-full max-w-md">
+    
+    <!-- Header Brand Logo -->
+    <div class="flex flex-col items-center text-center mb-8">
+      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 text-zinc-950 font-bold shadow-xl shadow-brand-500/20">
+        <i data-lucide="sparkles" class="h-6 w-6 stroke-[2.5]"></i>
+      </div>
+      <h2 class="mt-4 text-xl font-bold tracking-tight text-white flex items-center gap-2">
+        VibeCoding
+        <span class="rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-400">v1.0</span>
+      </h2>
+      <p class="mt-1 text-sm text-zinc-400">
+        Buat akun baru untuk mulai menggunakan sistem
+      </p>
+    </div>
+
+    <!-- Register Card (shadcn/ui style) -->
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+      
+      <!-- Alert Box -->
+      <div id="alertBox" class="hidden rounded-lg border px-4 py-3 text-sm transition-all duration-200 mb-5">
+        <div class="flex items-center gap-2.5">
+          <i id="alertIcon" data-lucide="alert-circle" class="h-4 w-4 shrink-0"></i>
+          <span id="alertMessage" class="flex-1 text-xs sm:text-sm font-medium"></span>
+        </div>
+      </div>
+
+      <!-- Form Register -->
+      <form id="registerForm" class="space-y-4" novalidate>
+        
+        <!-- Field Nama Lengkap -->
+        <div class="space-y-1.5">
+          <label for="name" class="block text-xs font-medium uppercase tracking-wider text-zinc-300">
+            Nama Lengkap
+          </label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+              <i data-lucide="user" class="h-4 w-4"></i>
+            </div>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              placeholder="Budi Santoso"
+              autocomplete="name"
+              class="block w-full rounded-md border border-zinc-800 bg-zinc-950/60 py-2.5 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 shadow-sm transition duration-150 ease-in-out focus:border-brand-500 focus:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
+        </div>
+
+        <!-- Field Email -->
+        <div class="space-y-1.5">
+          <label for="email" class="block text-xs font-medium uppercase tracking-wider text-zinc-300">
+            Email
+          </label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+              <i data-lucide="mail" class="h-4 w-4"></i>
+            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="budi@example.com"
+              autocomplete="email"
+              class="block w-full rounded-md border border-zinc-800 bg-zinc-950/60 py-2.5 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 shadow-sm transition duration-150 ease-in-out focus:border-brand-500 focus:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
+        </div>
+
+        <!-- Field Password -->
+        <div class="space-y-1.5">
+          <label for="password" class="block text-xs font-medium uppercase tracking-wider text-zinc-300">
+            Password (Min. 6 Karakter)
+          </label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+              <i data-lucide="lock" class="h-4 w-4"></i>
+            </div>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              minlength="6"
+              placeholder="••••••••"
+              autocomplete="new-password"
+              class="block w-full rounded-md border border-zinc-800 bg-zinc-950/60 py-2.5 pl-9 pr-10 text-sm text-zinc-100 placeholder:text-zinc-600 shadow-sm transition duration-150 ease-in-out focus:border-brand-500 focus:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+            <button
+              type="button"
+              id="togglePassword"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300 focus:outline-none"
+              aria-label="Lihat password"
+            >
+              <i id="togglePasswordIcon" data-lucide="eye" class="h-4 w-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="submitBtn"
+          class="group relative mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-brand-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 shadow-md shadow-brand-500/10 transition-all duration-200 ease-in-out hover:bg-brand-400 hover:shadow-lg hover:shadow-brand-500/20 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <span id="btnSpinner" class="hidden">
+            <i data-lucide="loader-2" class="h-4 w-4 animate-spin-custom"></i>
+          </span>
+          <span id="btnText">Daftar Akun</span>
+          <i id="btnArrow" data-lucide="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5"></i>
+        </button>
+
+      </form>
+
+      <!-- Navigasi ke Halaman Login -->
+      <div class="mt-6 pt-5 border-t border-zinc-800 text-center text-xs text-zinc-500">
+        Sudah punya akun?
+        <a href="/index.html" class="font-medium text-brand-400 hover:text-brand-300 hover:underline transition">
+          Masuk di sini
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Footer Copyright -->
+    <div class="mt-6 text-center text-xs text-zinc-600">
+      &copy; 2026 Belajar Vibe Coding &bull; Built with clean craftsmanship.
+    </div>
+
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const registerForm = document.getElementById('registerForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    const btnArrow = document.getElementById('btnArrow');
+    const alertBox = document.getElementById('alertBox');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertMessage = document.getElementById('alertMessage');
+
+    togglePasswordBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      togglePasswordIcon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+      lucide.createIcons();
+    });
+
+    function showAlert(type, message) {
+      alertBox.classList.remove('hidden', 'border-rose-900/50', 'bg-rose-950/40', 'text-rose-300', 'border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
+      
+      if (type === 'error') {
+        alertBox.classList.add('border-rose-900/50', 'bg-rose-950/40', 'text-rose-300');
+        alertIcon.setAttribute('data-lucide', 'alert-circle');
+      } else {
+        alertBox.classList.add('border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
+        alertIcon.setAttribute('data-lucide', 'check-circle-2');
+      }
+      alertMessage.textContent = message;
+      lucide.createIcons();
+    }
+
+    function hideAlert() {
+      alertBox.classList.add('hidden');
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      nameInput.disabled = isLoading;
+      emailInput.disabled = isLoading;
+      passwordInput.disabled = isLoading;
+      
+      if (isLoading) {
+        btnSpinner.classList.remove('hidden');
+        btnArrow.classList.add('hidden');
+        btnText.textContent = 'Mendaftarkan...';
+      } else {
+        btnSpinner.classList.add('hidden');
+        btnArrow.classList.remove('hidden');
+        btnText.textContent = 'Daftar Akun';
+      }
+      lucide.createIcons();
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!name || !email || !password) {
+        showAlert('error', 'Semua kolom wajib diisi');
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert('error', 'Password minimal 6 karakter');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showAlert('success', 'Registrasi berhasil! Mengalihkan ke halaman login...');
+          setTimeout(() => {
+            window.location.href = '/index.html';
+          }, 1200);
+        } else {
+          const errMsg = data.message || data.error || 'Terjadi kesalahan saat pendaftaran akun.';
+          showAlert('error', errMsg);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Register API error:', err);
+        showAlert('error', 'Gagal terhubung ke database/server backend. Pastikan layanan MySQL sedang aktif.');
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

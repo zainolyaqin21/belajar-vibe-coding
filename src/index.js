@@ -1,11 +1,23 @@
 import { Elysia } from "elysia";
+import { staticPlugin } from "@elysiajs/static";
 import { testDbConnection } from "./db/index.js";
 import { usersRoute, userRoute } from "./routes/users-route.js";
 
 const port = Number(process.env.PORT) || 3000;
 
 const app = new Elysia()
-  .get("/", () => ({
+  .use(
+    staticPlugin({
+      assets: "public",
+      prefix: "",
+      alwaysStatic: false,
+    })
+  )
+  .get("/", () => Bun.file("public/index.html"))
+  .get("/index.html", () => Bun.file("public/index.html"))
+  .get("/register.html", () => Bun.file("public/register.html"))
+  .get("/dashboard.html", () => Bun.file("public/dashboard.html"))
+  .get("/api/info", () => ({
     message: "Belajar Vibe Coding API is running!",
     timestamp: new Date().toISOString(),
   }))
