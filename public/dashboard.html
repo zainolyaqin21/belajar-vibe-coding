@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard &mdash; Belajar Vibe Coding</title>
+  <title>Dashboard &mdash; AgriTracker</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Google Fonts Inter / Plus Jakarta Sans -->
+  <!-- Google Fonts Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <script>
-    // Frontend Middleware / Auth Guard
+    // Auth Guard — cek token sebelum halaman dirender
     const token = localStorage.getItem('auth_token');
     if (!token) {
       window.location.replace('/index.html');
@@ -24,22 +24,13 @@
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
           colors: {
             brand: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              200: '#a7f3d0',
-              300: '#6ee7b7',
-              400: '#34d399',
-              500: '#10b981', // Emerald primary
-              600: '#059669',
-              700: '#047857',
-              800: '#065f46',
-              900: '#064e3b',
-              950: '#022c22',
+              50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0',
+              300: '#6ee7b7', 400: '#34d399', 500: '#10b981',
+              600: '#059669', 700: '#047857', 800: '#065f46',
+              900: '#064e3b', 950: '#022c22',
             }
           }
         }
@@ -48,15 +39,15 @@
   </script>
   <style>
     .bg-grid-pattern {
-      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
       background-size: 24px 24px;
     }
-    @keyframes spin-slow {
-      to { transform: rotate(360deg); }
-    }
-    .animate-spin-custom {
-      animation: spin-slow 0.8s linear infinite;
-    }
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    .animate-spin-custom { animation: spin-slow 0.8s linear infinite; }
+    /* Scrollbar styling untuk modal */
+    .modal-scroll::-webkit-scrollbar { width: 4px; }
+    .modal-scroll::-webkit-scrollbar-track { background: transparent; }
+    .modal-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
   </style>
 </head>
 <body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-brand-500/20 selection:text-brand-300">
@@ -66,27 +57,26 @@
   <!-- ======================================================== -->
   <header class="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-      
+
       <!-- Brand Logo -->
       <div class="flex items-center gap-3">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-zinc-950 font-bold shadow-md shadow-brand-500/20">
-          <i data-lucide="sparkles" class="h-4 w-4 stroke-[2.5]"></i>
+          <i data-lucide="sprout" class="h-4 w-4 stroke-[2.5]"></i>
         </div>
         <div>
-          <span class="text-base font-semibold tracking-tight text-white">VibeCoding</span>
+          <span class="text-base font-semibold tracking-tight text-white">AgriTracker</span>
           <span class="ml-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-400">Dashboard</span>
         </div>
       </div>
 
-      <!-- Action Button Logout -->
+      <!-- User Info + Logout -->
       <div class="flex items-center gap-3">
+        <span id="navUserName" class="hidden sm:block text-xs text-zinc-400"></span>
         <button
           id="logoutBtn"
           class="inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/80 px-3.5 py-1.5 text-xs sm:text-sm font-medium text-zinc-300 shadow-sm transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white active:scale-95 disabled:opacity-50"
         >
-          <span id="logoutSpinner" class="hidden">
-            <i data-lucide="loader-2" class="h-4 w-4 animate-spin-custom"></i>
-          </span>
+          <span id="logoutSpinner" class="hidden"><i data-lucide="loader-2" class="h-4 w-4 animate-spin-custom"></i></span>
           <i id="logoutIcon" data-lucide="log-out" class="h-4 w-4 text-rose-400"></i>
           <span id="logoutText">Logout</span>
         </button>
@@ -96,14 +86,13 @@
   </header>
 
   <!-- ======================================================== -->
-  <!-- MAIN CONTENT AREA -->
+  <!-- MAIN CONTENT -->
   <!-- ======================================================== -->
-  <main class="relative flex-1 py-10 px-4 sm:px-6 lg:px-8">
+  <main class="relative flex-1 py-8 px-4 sm:px-6 lg:px-8">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
+    <div class="relative mx-auto max-w-6xl space-y-8">
 
-    <div class="relative mx-auto max-w-4xl space-y-6">
-      
-      <!-- Notification Banner -->
+      <!-- Global Alert Banner -->
       <div id="alertBox" class="hidden rounded-lg border px-4 py-3 text-sm transition-all duration-200">
         <div class="flex items-center gap-2.5">
           <i id="alertIcon" data-lucide="alert-circle" class="h-4 w-4 shrink-0"></i>
@@ -111,123 +100,301 @@
         </div>
       </div>
 
-      <!-- Welcome Banner Card -->
-      <div class="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950 p-6 sm:p-8 shadow-xl backdrop-blur-sm">
+      <!-- Greeting Banner -->
+      <div class="rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/80 to-zinc-950 p-6 shadow-xl">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-400">
-              <span class="h-2 w-2 rounded-full bg-brand-400 animate-pulse"></span>
-              Sesi Autentikasi Aktif
-            </div>
-            <h1 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Selamat Datang, <span id="welcomeUserName" class="text-brand-400">Pengguna</span>!
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Halo, <span id="welcomeUserName" class="text-brand-400">Petani</span>! 🌱
             </h1>
-            <p class="mt-1 text-sm text-zinc-400">
-              Anda berhasil masuk ke sistem yang terproteksi dengan session token UUID.
-            </p>
+            <p class="mt-1 text-sm text-zinc-400">Pantau dan catat perkembangan tanaman Anda hari ini.</p>
           </div>
-          <div class="shrink-0 flex items-center">
-            <div class="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-brand-400 shadow-inner">
-              <i data-lucide="shield-check" class="h-8 w-8 stroke-[1.75]"></i>
-            </div>
-          </div>
+          <!-- Tombol Tambah Tanaman -->
+          <button
+            id="openAddPlantModal"
+            class="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 shadow-md shadow-brand-500/20 transition hover:bg-brand-400 active:scale-[0.98] shrink-0"
+          >
+            <i data-lucide="plus" class="h-4 w-4"></i>
+            Tambah Tanaman
+          </button>
         </div>
       </div>
 
-      <!-- User Profile & System Status Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- Profile Card -->
-        <div class="md:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 shadow-sm">
+      <!-- Section: Daftar Tanaman -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
           <h2 class="text-base font-semibold text-white flex items-center gap-2">
-            <i data-lucide="user" class="h-4 w-4 text-brand-400"></i>
-            Informasi Profil User
+            <i data-lucide="leaf" class="h-4 w-4 text-brand-400"></i>
+            Daftar Tanaman
           </h2>
-          <p class="mt-1 text-xs text-zinc-500">
-            Data diambil secara real-time dari endpoint <code class="text-zinc-300 font-mono">GET /api/users/current</code>.
-          </p>
-
-          <!-- Loading Skeleton -->
-          <div id="profileLoading" class="mt-6 space-y-4">
-            <div class="h-4 w-3/4 bg-zinc-800/60 rounded animate-pulse"></div>
-            <div class="h-4 w-1/2 bg-zinc-800/60 rounded animate-pulse"></div>
-            <div class="h-4 w-2/3 bg-zinc-800/60 rounded animate-pulse"></div>
-          </div>
-
-          <!-- Profile Details Table/List -->
-          <div id="profileDetails" class="mt-6 hidden divide-y divide-zinc-800/80 border-t border-zinc-800/80 text-sm">
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">Nama Lengkap</span>
-              <span id="profileName" class="font-medium text-white">-</span>
-            </div>
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">Alamat Email</span>
-              <span id="profileEmail" class="font-medium text-white">-</span>
-            </div>
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">User ID</span>
-              <span id="profileId" class="font-mono text-zinc-300">-</span>
-            </div>
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">Terdaftar Sejak</span>
-              <span id="profileCreatedAt" class="text-zinc-300">-</span>
-            </div>
-          </div>
+          <span id="plantsCount" class="text-xs text-zinc-500"></span>
         </div>
 
-        <!-- System Status Card -->
-        <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <h2 class="text-base font-semibold text-white flex items-center gap-2">
-              <i data-lucide="activity" class="h-4 w-4 text-brand-400"></i>
-              Status Keamanan
-            </h2>
-            <div class="mt-4 space-y-3 text-xs">
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div class="text-zinc-500 uppercase tracking-wider text-[10px]">Token Storage</div>
-                <div class="mt-1 font-mono text-zinc-300 truncate">localStorage: auth_token</div>
-              </div>
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div class="text-zinc-500 uppercase tracking-wider text-[10px]">Auth Type</div>
-                <div class="mt-1 font-medium text-brand-400">Bearer Token Header</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="pt-4 border-t border-zinc-800/80 mt-4 text-[11px] text-zinc-500">
-            Koneksi aktif ke Bun &bull; ElysiaJS
-          </div>
+        <!-- Loading Skeleton -->
+        <div id="plantsLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="h-32 rounded-2xl bg-zinc-800/40 animate-pulse"></div>
+          <div class="h-32 rounded-2xl bg-zinc-800/40 animate-pulse"></div>
+          <div class="h-32 rounded-2xl bg-zinc-800/40 animate-pulse"></div>
         </div>
 
+        <!-- Grid Cards Tanaman -->
+        <div id="plantsGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+        <!-- Empty State -->
+        <div id="plantsEmpty" class="hidden rounded-2xl border border-dashed border-zinc-800 p-10 text-center">
+          <i data-lucide="sprout" class="mx-auto h-10 w-10 text-zinc-700"></i>
+          <p class="mt-3 text-sm text-zinc-500">Belum ada tanaman. Tambahkan tanaman pertama Anda!</p>
+          <button
+            onclick="document.getElementById('openAddPlantModal').click()"
+            class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-500/10 border border-brand-500/20 px-4 py-2 text-xs font-medium text-brand-400 hover:bg-brand-500/20 transition"
+          >
+            <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+            Tambah Sekarang
+          </button>
+        </div>
       </div>
 
     </div>
   </main>
 
   <!-- ======================================================== -->
-  <!-- JAVASCRIPT: Auth Guard, Fetch Current User, and Logout -->
+  <!-- MODAL: Tambah Tanaman Baru -->
+  <!-- ======================================================== -->
+  <div id="addPlantModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div id="addPlantBackdrop" class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"></div>
+    <!-- Modal Content -->
+    <div class="relative w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i data-lucide="plus-circle" class="h-4 w-4 text-brand-400"></i>
+          Tambah Tanaman Baru
+        </h3>
+        <button id="closeAddPlantModal" class="text-zinc-500 hover:text-zinc-300 transition">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Alert dalam modal -->
+      <div id="addPlantAlert" class="hidden rounded-lg border border-rose-900/50 bg-rose-950/40 text-rose-300 px-3 py-2 text-xs mb-4"></div>
+
+      <form id="addPlantForm" class="space-y-4">
+        <!-- Nama Tanaman -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium uppercase tracking-wider text-zinc-300">Nama Tanaman</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+              <i data-lucide="sprout" class="h-4 w-4"></i>
+            </div>
+            <input
+              type="text"
+              id="plantName"
+              required
+              placeholder="Tomat, Cabai, Bayam..."
+              class="block w-full rounded-md border border-zinc-700 bg-zinc-950/60 py-2.5 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Tanggal Mulai Tanam -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium uppercase tracking-wider text-zinc-300">Tanggal Mulai Tanam</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+              <i data-lucide="calendar" class="h-4 w-4"></i>
+            </div>
+            <input
+              type="date"
+              id="plantDate"
+              required
+              class="block w-full rounded-md border border-zinc-700 bg-zinc-950/60 py-2.5 pl-9 pr-3 text-sm text-zinc-100 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex gap-3 pt-2">
+          <button
+            type="button"
+            id="cancelAddPlant"
+            class="flex-1 rounded-md border border-zinc-700 bg-zinc-800 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            id="addPlantSubmit"
+            class="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-brand-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-brand-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <span id="addPlantSpinner" class="hidden"><i data-lucide="loader-2" class="h-4 w-4 animate-spin-custom"></i></span>
+            <span id="addPlantBtnText">Simpan Tanaman</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: Detail Tanaman & Jurnal Harian (Plant Logs) -->
+  <!-- ======================================================== -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div id="detailBackdrop" class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"></div>
+    <!-- Modal Content -->
+    <div class="relative w-full max-w-lg rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl flex flex-col max-h-[85vh]">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b border-zinc-800 shrink-0">
+        <div>
+          <h3 id="detailPlantName" class="text-base font-semibold text-white"></h3>
+          <p id="detailPlantDate" class="text-xs text-zinc-500 mt-0.5"></p>
+        </div>
+        <button id="closeDetailModal" class="text-zinc-500 hover:text-zinc-300 transition">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (scrollable) -->
+      <div class="flex-1 overflow-y-auto modal-scroll p-5 space-y-5">
+
+        <!-- Jurnal Harian Section -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2 mb-3">
+            <i data-lucide="notebook-pen" class="h-3.5 w-3.5 text-brand-400"></i>
+            Catatan Jurnal Harian
+          </h4>
+
+          <!-- Loading Logs -->
+          <div id="logsLoading" class="space-y-2">
+            <div class="h-14 rounded-lg bg-zinc-800/40 animate-pulse"></div>
+            <div class="h-14 rounded-lg bg-zinc-800/40 animate-pulse"></div>
+          </div>
+
+          <!-- Daftar Logs -->
+          <div id="logsList" class="hidden space-y-2"></div>
+
+          <!-- Empty Logs -->
+          <div id="logsEmpty" class="hidden text-center py-6">
+            <i data-lucide="book-open" class="mx-auto h-8 w-8 text-zinc-700"></i>
+            <p class="mt-2 text-xs text-zinc-500">Belum ada catatan jurnal untuk tanaman ini.</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-zinc-800"></div>
+
+        <!-- Form Tambah Catatan Jurnal -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2 mb-3">
+            <i data-lucide="plus-circle" class="h-3.5 w-3.5 text-brand-400"></i>
+            Tambah Catatan Baru
+          </h4>
+
+          <!-- Alert form log -->
+          <div id="addLogAlert" class="hidden rounded-lg border border-rose-900/50 bg-rose-950/40 text-rose-300 px-3 py-2 text-xs mb-3"></div>
+
+          <form id="addLogForm" class="space-y-3">
+            <div class="space-y-1">
+              <label class="block text-xs font-medium text-zinc-400">Catatan</label>
+              <textarea
+                id="logCatatan"
+                rows="3"
+                required
+                placeholder="Contoh: Hari ini melakukan penyiraman dan pemupukan..."
+                class="block w-full rounded-md border border-zinc-700 bg-zinc-950/60 py-2 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition resize-none"
+              ></textarea>
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-medium text-zinc-400">Foto <span class="text-zinc-600">(opsional)</span></label>
+              <input
+                type="text"
+                id="logFoto"
+                placeholder="Nama file foto, contoh: foto-tomat.jpg"
+                class="block w-full rounded-md border border-zinc-700 bg-zinc-950/60 py-2 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition"
+              />
+            </div>
+            <button
+              type="submit"
+              id="addLogSubmit"
+              class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-brand-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-brand-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <span id="addLogSpinner" class="hidden"><i data-lucide="loader-2" class="h-4 w-4 animate-spin-custom"></i></span>
+              <span id="addLogBtnText">Simpan Catatan</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT -->
   <!-- ======================================================== -->
   <script>
+    // =============================================
+    // INISIALISASI & KONSTANTA
+    // =============================================
     lucide.createIcons();
 
-    const welcomeUserName = document.getElementById('welcomeUserName');
-    const profileLoading = document.getElementById('profileLoading');
-    const profileDetails = document.getElementById('profileDetails');
-    const profileName = document.getElementById('profileName');
-    const profileEmail = document.getElementById('profileEmail');
-    const profileId = document.getElementById('profileId');
-    const profileCreatedAt = document.getElementById('profileCreatedAt');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const logoutSpinner = document.getElementById('logoutSpinner');
-    const logoutIcon = document.getElementById('logoutIcon');
-    const logoutText = document.getElementById('logoutText');
-    const alertBox = document.getElementById('alertBox');
-    const alertIcon = document.getElementById('alertIcon');
-    const alertMessage = document.getElementById('alertMessage');
+    const AUTH_TOKEN = localStorage.getItem('auth_token');
+    const API_HEADERS = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${AUTH_TOKEN}`
+    };
 
+    // State aktif
+    let activePlantId = null;
+
+    // Referensi elemen DOM
+    const navUserName       = document.getElementById('navUserName');
+    const welcomeUserName   = document.getElementById('welcomeUserName');
+    const logoutBtn         = document.getElementById('logoutBtn');
+    const logoutSpinner     = document.getElementById('logoutSpinner');
+    const logoutIcon        = document.getElementById('logoutIcon');
+    const logoutText        = document.getElementById('logoutText');
+
+    const alertBox          = document.getElementById('alertBox');
+    const alertIcon         = document.getElementById('alertIcon');
+    const alertMessage      = document.getElementById('alertMessage');
+
+    const plantsLoading     = document.getElementById('plantsLoading');
+    const plantsGrid        = document.getElementById('plantsGrid');
+    const plantsEmpty       = document.getElementById('plantsEmpty');
+    const plantsCount       = document.getElementById('plantsCount');
+
+    const addPlantModal     = document.getElementById('addPlantModal');
+    const addPlantBackdrop  = document.getElementById('addPlantBackdrop');
+    const addPlantForm      = document.getElementById('addPlantForm');
+    const plantNameInput    = document.getElementById('plantName');
+    const plantDateInput    = document.getElementById('plantDate');
+    const addPlantAlert     = document.getElementById('addPlantAlert');
+    const addPlantSpinner   = document.getElementById('addPlantSpinner');
+    const addPlantBtnText   = document.getElementById('addPlantBtnText');
+    const addPlantSubmit    = document.getElementById('addPlantSubmit');
+
+    const detailModal       = document.getElementById('detailModal');
+    const detailBackdrop    = document.getElementById('detailBackdrop');
+    const detailPlantName   = document.getElementById('detailPlantName');
+    const detailPlantDate   = document.getElementById('detailPlantDate');
+    const logsLoading       = document.getElementById('logsLoading');
+    const logsList          = document.getElementById('logsList');
+    const logsEmpty         = document.getElementById('logsEmpty');
+
+    const addLogForm        = document.getElementById('addLogForm');
+    const logCatatan        = document.getElementById('logCatatan');
+    const logFoto           = document.getElementById('logFoto');
+    const addLogAlert       = document.getElementById('addLogAlert');
+    const addLogSpinner     = document.getElementById('addLogSpinner');
+    const addLogBtnText     = document.getElementById('addLogBtnText');
+    const addLogSubmit      = document.getElementById('addLogSubmit');
+
+    // =============================================
+    // UTILITAS
+    // =============================================
     function showAlert(type, message) {
-      alertBox.classList.remove('hidden', 'border-rose-900/50', 'bg-rose-950/40', 'text-rose-300', 'border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
-      
+      alertBox.classList.remove('hidden', 'border-rose-900/50', 'bg-rose-950/40', 'text-rose-300',
+                                 'border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
       if (type === 'error') {
         alertBox.classList.add('border-rose-900/50', 'bg-rose-950/40', 'text-rose-300');
         alertIcon.setAttribute('data-lucide', 'alert-circle');
@@ -237,79 +404,332 @@
       }
       alertMessage.textContent = message;
       lucide.createIcons();
+      // Auto-hide setelah 4 detik
+      setTimeout(() => alertBox.classList.add('hidden'), 4000);
     }
 
-    // Ambil data profil user saat ini
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function openModal(modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal(modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // =============================================
+    // AUTH: LOAD CURRENT USER
+    // =============================================
     async function loadCurrentUser() {
-      const authToken = localStorage.getItem('auth_token');
-      if (!authToken) {
-        window.location.replace('/index.html');
-        return;
-      }
-
+      if (!AUTH_TOKEN) { window.location.replace('/index.html'); return; }
       try {
-        const response = await fetch('/api/users/current', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
+        const res = await fetch('/api/users/current', {
+          headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
         });
-
-        if (!response.ok) {
-          // Token tidak valid atau sesi kadaluarsa
+        if (!res.ok) {
           localStorage.removeItem('auth_token');
           window.location.replace('/index.html');
           return;
         }
-
-        const result = await response.json();
-        const user = result.data;
-
-        // Render data user
-        welcomeUserName.textContent = user.name || 'Pengguna';
-        profileName.textContent = user.name || '-';
-        profileEmail.textContent = user.email || '-';
-        profileId.textContent = `#${user.id || '-'}`;
-        profileCreatedAt.textContent = user.created_at ? new Date(user.created_at).toLocaleString('id-ID') : '-';
-
-        profileLoading.classList.add('hidden');
-        profileDetails.classList.remove('hidden');
+        const result = await res.json();
+        const name = result.data?.name || 'Petani';
+        welcomeUserName.textContent = name;
+        navUserName.textContent = name;
       } catch (err) {
-        console.error('Error fetching current user:', err);
-        showAlert('error', 'Gagal memuat profil pengguna dari server.');
+        console.error('Gagal memuat profil:', err);
       }
     }
 
-    // Aksi Logout
+    // =============================================
+    // PLANTS: FETCH & RENDER
+    // =============================================
+    async function fetchPlants() {
+      plantsLoading.classList.remove('hidden');
+      plantsGrid.classList.add('hidden');
+      plantsEmpty.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/plants', { headers: API_HEADERS });
+        const result = await res.json();
+
+        plantsLoading.classList.add('hidden');
+
+        if (!result.success || !result.data || result.data.length === 0) {
+          plantsEmpty.classList.remove('hidden');
+          plantsCount.textContent = '0 tanaman';
+          return;
+        }
+
+        renderPlants(result.data);
+        plantsCount.textContent = `${result.data.length} tanaman`;
+        plantsGrid.classList.remove('hidden');
+      } catch (err) {
+        plantsLoading.classList.add('hidden');
+        plantsEmpty.classList.remove('hidden');
+        showAlert('error', 'Gagal memuat daftar tanaman. Pastikan server backend aktif.');
+      }
+    }
+
+    function renderPlants(plants) {
+      plantsGrid.innerHTML = '';
+      plants.forEach(plant => {
+        const card = document.createElement('div');
+        card.className = 'group cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm hover:border-brand-500/40 hover:bg-zinc-900 hover:shadow-brand-500/5 transition-all duration-200';
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 shrink-0">
+              <i data-lucide="sprout" class="h-5 w-5"></i>
+            </div>
+            <span class="text-[10px] text-zinc-600 group-hover:text-brand-400 transition flex items-center gap-1">
+              <i data-lucide="book-open" class="h-3 w-3"></i> Lihat Jurnal
+            </span>
+          </div>
+          <div class="mt-3">
+            <h3 class="font-semibold text-white text-sm leading-snug">${plant.name}</h3>
+            <p class="mt-1 text-xs text-zinc-500 flex items-center gap-1.5">
+              <i data-lucide="calendar" class="h-3 w-3"></i>
+              Mulai tanam: ${formatDate(plant.tanggal)}
+            </p>
+          </div>
+        `;
+        card.addEventListener('click', () => openPlantDetail(plant));
+        plantsGrid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // =============================================
+    // PLANTS: TAMBAH TANAMAN BARU
+    // =============================================
+    document.getElementById('openAddPlantModal').addEventListener('click', () => {
+      addPlantForm.reset();
+      addPlantAlert.classList.add('hidden');
+      openModal(addPlantModal);
+      lucide.createIcons();
+    });
+
+    document.getElementById('closeAddPlantModal').addEventListener('click', () => closeModal(addPlantModal));
+    document.getElementById('cancelAddPlant').addEventListener('click', () => closeModal(addPlantModal));
+    addPlantBackdrop.addEventListener('click', () => closeModal(addPlantModal));
+
+    addPlantForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      addPlantAlert.classList.add('hidden');
+
+      const name = plantNameInput.value.trim();
+      const date = plantDateInput.value;
+
+      if (!name || !date) {
+        addPlantAlert.textContent = 'Nama tanaman dan tanggal wajib diisi.';
+        addPlantAlert.classList.remove('hidden');
+        return;
+      }
+
+      // Set loading
+      addPlantSubmit.disabled = true;
+      addPlantSpinner.classList.remove('hidden');
+      addPlantBtnText.textContent = 'Menyimpan...';
+      lucide.createIcons();
+
+      try {
+        const res = await fetch('/api/plants', {
+          method: 'POST',
+          headers: API_HEADERS,
+          body: JSON.stringify({ name, tanggal: new Date(date).toISOString() })
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          closeModal(addPlantModal);
+          showAlert('success', `Tanaman "${name}" berhasil ditambahkan!`);
+          await fetchPlants(); // Refresh grid
+        } else {
+          addPlantAlert.textContent = result.message || result.error || 'Gagal menambahkan tanaman.';
+          addPlantAlert.classList.remove('hidden');
+        }
+      } catch (err) {
+        addPlantAlert.textContent = 'Gagal terhubung ke server.';
+        addPlantAlert.classList.remove('hidden');
+      } finally {
+        addPlantSubmit.disabled = false;
+        addPlantSpinner.classList.add('hidden');
+        addPlantBtnText.textContent = 'Simpan Tanaman';
+        lucide.createIcons();
+      }
+    });
+
+    // =============================================
+    // PLANT DETAIL & LOGS
+    // =============================================
+    async function openPlantDetail(plant) {
+      activePlantId = plant.id;
+
+      // Reset state
+      detailPlantName.textContent = plant.name;
+      detailPlantDate.textContent = `Mulai tanam: ${formatDate(plant.tanggal)}`;
+      logsLoading.classList.remove('hidden');
+      logsList.classList.add('hidden');
+      logsEmpty.classList.add('hidden');
+      addLogForm.reset();
+      addLogAlert.classList.add('hidden');
+
+      openModal(detailModal);
+      lucide.createIcons();
+
+      await fetchLogs(plant.id);
+    }
+
+    document.getElementById('closeDetailModal').addEventListener('click', () => {
+      closeModal(detailModal);
+      activePlantId = null;
+    });
+    detailBackdrop.addEventListener('click', () => {
+      closeModal(detailModal);
+      activePlantId = null;
+    });
+
+    async function fetchLogs(plantId) {
+      logsLoading.classList.remove('hidden');
+      logsList.classList.add('hidden');
+      logsEmpty.classList.add('hidden');
+
+      try {
+        const res = await fetch(`/api/plants/${plantId}/logs`, { headers: API_HEADERS });
+        const result = await res.json();
+
+        logsLoading.classList.add('hidden');
+
+        if (!result.success || !result.data || result.data.length === 0) {
+          logsEmpty.classList.remove('hidden');
+          return;
+        }
+
+        renderLogs(result.data);
+        logsList.classList.remove('hidden');
+      } catch (err) {
+        logsLoading.classList.add('hidden');
+        logsEmpty.classList.remove('hidden');
+      }
+    }
+
+    function renderLogs(logs) {
+      logsList.innerHTML = '';
+      // Tampilkan terbaru di atas
+      [...logs].reverse().forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 text-sm';
+        item.innerHTML = `
+          <p class="text-zinc-100 leading-relaxed">${log.catatan}</p>
+          <div class="mt-2 flex items-center justify-between gap-2 flex-wrap">
+            <span class="text-[11px] text-zinc-500 flex items-center gap-1">
+              <i data-lucide="clock" class="h-3 w-3"></i>
+              ${formatDateTime(log.created_at)}
+            </span>
+            ${log.foto ? `<span class="text-[11px] text-brand-400 flex items-center gap-1"><i data-lucide="image" class="h-3 w-3"></i>${log.foto}</span>` : ''}
+          </div>
+        `;
+        logsList.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    // =============================================
+    // ADD LOG
+    // =============================================
+    addLogForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      addLogAlert.classList.add('hidden');
+
+      const catatan = logCatatan.value.trim();
+      const foto = logFoto.value.trim() || null;
+
+      if (!catatan) {
+        addLogAlert.textContent = 'Catatan tidak boleh kosong.';
+        addLogAlert.classList.remove('hidden');
+        return;
+      }
+
+      addLogSubmit.disabled = true;
+      addLogSpinner.classList.remove('hidden');
+      addLogBtnText.textContent = 'Menyimpan...';
+      lucide.createIcons();
+
+      try {
+        const body = { catatan };
+        if (foto) body.foto = foto;
+
+        const res = await fetch(`/api/plants/${activePlantId}/logs`, {
+          method: 'POST',
+          headers: API_HEADERS,
+          body: JSON.stringify(body)
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          addLogForm.reset();
+          await fetchLogs(activePlantId); // Refresh daftar log
+        } else {
+          addLogAlert.textContent = result.message || result.error || 'Gagal menyimpan catatan.';
+          addLogAlert.classList.remove('hidden');
+        }
+      } catch (err) {
+        addLogAlert.textContent = 'Gagal terhubung ke server.';
+        addLogAlert.classList.remove('hidden');
+      } finally {
+        addLogSubmit.disabled = false;
+        addLogSpinner.classList.add('hidden');
+        addLogBtnText.textContent = 'Simpan Catatan';
+        lucide.createIcons();
+      }
+    });
+
+    // =============================================
+    // LOGOUT
+    // =============================================
     logoutBtn.addEventListener('click', async () => {
-      const authToken = localStorage.getItem('auth_token');
       logoutBtn.disabled = true;
       logoutSpinner.classList.remove('hidden');
       logoutIcon.classList.add('hidden');
       logoutText.textContent = 'Memproses...';
       lucide.createIcons();
 
-      if (authToken) {
-        try {
-          await fetch('/api/users/logout', {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${authToken}`
-            }
-          });
-        } catch (err) {
-          console.warn('Logout network request warning:', err);
-        }
+      try {
+        await fetch('/api/users/logout', {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+        });
+      } catch (err) {
+        console.warn('Logout warning:', err);
       }
 
-      // Bersihkan session di client dan redirect
       localStorage.removeItem('auth_token');
       window.location.replace('/index.html');
     });
 
-    // Jalankan pengambilan profil
-    loadCurrentUser();
+    // =============================================
+    // INIT — Jalankan saat halaman dimuat
+    // =============================================
+    (async function init() {
+      await loadCurrentUser();
+      await fetchPlants();
+    })();
   </script>
+
 </body>
 </html>
-
