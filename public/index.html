@@ -292,8 +292,9 @@
 
         const data = await response.json();
 
-        if (response.ok && data.data) {
-          localStorage.setItem('auth_token', data.data);
+        if (response.ok && (data.data || data.token)) {
+          const authToken = typeof data.data === 'object' ? (data.data.token || data.token) : (data.data || data.token);
+          localStorage.setItem('auth_token', authToken);
           showAlert('success', 'Login berhasil! Mengalihkan ke dashboard...');
           setTimeout(() => {
             window.location.href = '/dashboard.html';

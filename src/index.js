@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { staticPlugin } from "@elysiajs/static";
 import { testDbConnection } from "./db/index.js";
-import { usersRoute, userRoute } from "./routes/users-route.js";
+import { usersRoute } from "./routes/users-route.js";
 import { plantsRoute } from "./routes/plants-route.js";
 import { plantLogsRoute, plantLogsCrudRoute } from "./routes/plant-logs-route.js";
 
@@ -33,7 +33,6 @@ const app = new Elysia()
     };
   })
   .use(usersRoute)
-  .use(userRoute)
   .use(plantsRoute)
   .use(plantLogsCrudRoute)
   .use(plantLogsRoute)

@@ -1,43 +1,66 @@
 import { Elysia, t } from "elysia";
-import { registerUser, loginUser, getCurrentUser, logoutUser } from "../services/users-service.js";
+import {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  logoutUser,
+} from "../services/users-service.js";
+import { extractBearerToken } from "../middlewares/auth-middleware.js";
 
 export const usersRoute = new Elysia({ prefix: "/api/users" })
   .onError(({ code, error, set, path }) => {
-    // Khusus endpoint /logout, response error unauthorized
+    // Penanganan error khusus endpoint /logout
     if (path.endsWith("/logout")) {
       set.status = error.statusCode || 401;
       return {
-        error: "unauthorized",
+        success: false,
+        message: error.message || "Unauthorized",
+        error: error.message || "unauthorized",
       };
     }
 
-    // Khusus endpoint /login, response error disesuaikan dengan spesifikasi
+    // Penanganan error khusus endpoint /login
     if (path.endsWith("/login")) {
       set.status = error.statusCode || (code === "VALIDATION" ? 400 : 401);
       return {
-        error: "Email atau password salah",
+        success: false,
+        message: error.message || "Email atau password salah",
+        error: error.message || "Email atau password salah",
       };
     }
 
-    // Khusus endpoint /current, response error Unauthorized
+    // Penanganan error khusus endpoint /current
     if (path.endsWith("/current")) {
       set.status = error.statusCode || 401;
       return {
-        error: "Unauthorized",
+        success: false,
+        message: error.message || "Unauthorized",
+        error: error.message || "Unauthorized",
       };
     }
 
     if (code === "VALIDATION") {
       set.status = 400;
+      const details = error.validator?.Errors
+        ? [...error.validator.Errors(error.value)].map((e) => e.message)
+        : error.message;
       return {
         success: false,
         message: "Validasi gagal: email tidak valid atau data tidak lengkap",
-        details: error.validator?.Errors
-          ? [...error.validator.Errors(error.value)].map((e) => e.message)
-          : error.message,
+        error: "Validasi gagal",
+        details,
       };
     }
+
+    set.status = error.statusCode || 500;
+    return {
+      success: false,
+      message: error.message || "Terjadi kesalahan pada server",
+      error: error.message || "Terjadi kesalahan pada server",
+    };
   })
+
+  // POST /api/users/login
   .post(
     "/login",
     async ({ body, set }) => {
@@ -47,11 +70,16 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
 
         set.status = 200;
         return {
+          success: true,
+          message: "Login berhasil",
           data: token,
+          token,
         };
       } catch (error) {
         set.status = error.statusCode || 401;
         return {
+          success: false,
+          message: error.message || "Email atau password salah",
           error: error.message || "Email atau password salah",
         };
       }
@@ -63,70 +91,51 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       }),
     }
   )
+
+  // GET /api/users/current
   .get("/current", async ({ headers, set }) => {
     try {
-      const authHeader = headers["authorization"] || headers["Authorization"];
-
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        set.status = 401;
-        return {
-          error: "Unauthorized",
-        };
-      }
-
-      const token = authHeader.substring(7).trim();
-      if (!token) {
-        set.status = 401;
-        return {
-          error: "Unauthorized",
-        };
-      }
-
+      const token = extractBearerToken(headers);
       const user = await getCurrentUser(token);
 
       set.status = 200;
       return {
+        success: true,
         data: user,
       };
     } catch (error) {
       set.status = error.statusCode || 401;
       return {
-        error: "Unauthorized",
+        success: false,
+        message: error.message || "Unauthorized",
+        error: error.message || "Unauthorized",
       };
     }
   })
+
+  // DELETE /api/users/logout
   .delete("/logout", async ({ headers, set }) => {
     try {
-      const authHeader = headers["authorization"] || headers["Authorization"];
-
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        set.status = 401;
-        return {
-          error: "unauthorized",
-        };
-      }
-
-      const token = authHeader.substring(7).trim();
-      if (!token) {
-        set.status = 401;
-        return {
-          error: "unauthorized",
-        };
-      }
-
+      const token = extractBearerToken(headers);
       await logoutUser(token);
 
       set.status = 200;
       return {
+        success: true,
+        message: "Logout berhasil",
         data: "ok",
       };
     } catch (error) {
       set.status = error.statusCode || 401;
       return {
-        error: "unauthorized",
+        success: false,
+        message: error.message || "Unauthorized",
+        error: error.message || "unauthorized",
       };
     }
   })
+
+  // POST /api/users/register (satu-satunya handler register)
   .post(
     "/register",
     async ({ body, set }) => {
@@ -141,67 +150,11 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
           data: newUser,
         };
       } catch (error) {
-        if (error.statusCode === 409) {
-          set.status = 409;
-          return {
-            success: false,
-            message: error.message,
-          };
-        }
-
         set.status = error.statusCode || 500;
         return {
           success: false,
           message: error.message || "Terjadi kesalahan pada server",
-        };
-      }
-    },
-    {
-      body: t.Object({
-        name: t.String({
-          minLength: 2,
-          maxLength: 255,
-          description: "Nama lengkap user",
-        }),
-        email: t.String({
-          format: "email",
-          maxLength: 255,
-          description: "Alamat email user yang valid",
-        }),
-        password: t.String({
-          minLength: 6,
-          maxLength: 255,
-          description: "Password minimal 6 karakter",
-        }),
-      }),
-    }
-  )
-  .post(
-    "/",
-    async ({ body, set }) => {
-      try {
-        const { name, email, password } = body;
-        const newUser = await registerUser({ name, email, password });
-
-        set.status = 201;
-        return {
-          success: true,
-          message: "User berhasil didaftarkan",
-          data: newUser,
-        };
-      } catch (error) {
-        if (error.statusCode === 409) {
-          set.status = 409;
-          return {
-            success: false,
-            message: error.message,
-          };
-        }
-
-        set.status = error.statusCode || 500;
-        return {
-          success: false,
-          message: error.message || "Terjadi kesalahan pada server",
+          error: error.message || "Terjadi kesalahan pada server",
         };
       }
     },
@@ -226,46 +179,5 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
     }
   );
 
-// Alias untuk menjaga backward compatibility
+// Alias untuk menjaga backward compatibility import
 export const userRoutes = usersRoute;
-
-// Sub-route untuk mendukung endpoint /api/user/logout sesuai issue spesifikasi
-export const userRoute = new Elysia({ prefix: "/api/user" })
-  .onError(({ error, set }) => {
-    set.status = error.statusCode || 401;
-    return {
-      error: "unauthorized",
-    };
-  })
-  .delete("/logout", async ({ headers, set }) => {
-    try {
-      const authHeader = headers["authorization"] || headers["Authorization"];
-
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        set.status = 401;
-        return {
-          error: "unauthorized",
-        };
-      }
-
-      const token = authHeader.substring(7).trim();
-      if (!token) {
-        set.status = 401;
-        return {
-          error: "unauthorized",
-        };
-      }
-
-      await logoutUser(token);
-
-      set.status = 200;
-      return {
-        data: "ok",
-      };
-    } catch (error) {
-      set.status = error.statusCode || 401;
-      return {
-        error: "unauthorized",
-      };
-    }
-  });

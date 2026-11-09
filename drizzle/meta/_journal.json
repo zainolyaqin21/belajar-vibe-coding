@@ -8,6 +8,13 @@
       "when": 1792820338148,
       "tag": "0000_supreme_rictor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1794232907232,
+      "tag": "0001_breezy_gunslinger",
+      "breakpoints": true
     }
   ]
 }
