@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-zinc-950 text-zinc-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil Saya &mdash; AgriTracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // Auth Guard
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      window.location.replace('/index.html');
+    }
+
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .bg-grid-pattern {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    @keyframes spin-slow {
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-slow 0.8s linear infinite;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-brand-500/20 selection:text-brand-300">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
+    <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      
+      <!-- Brand Logo -->
+      <a href="/dashboard.html" class="flex items-center gap-3 group">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-zinc-950 font-bold shadow-md shadow-brand-500/20 group-hover:scale-105 transition">
+          <i data-lucide="sprout" class="h-5 w-5 stroke-[2.5]"></i>
+        </div>
+        <div>
+          <span class="text-base font-semibold tracking-tight text-white">AgriTracker</span>
+          <span class="ml-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-400">Profil</span>
+        </div>
+      </a>
+
+      <!-- Navigation Actions -->
+      <div class="flex items-center gap-3">
+        <a
+          href="/dashboard.html"
+          class="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3.5 py-1.5 text-xs sm:text-sm font-medium text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white"
+        >
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+          <span>Dashboard</span>
+        </a>
+        <button
+          id="logoutBtn"
+          class="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3.5 py-1.5 text-xs sm:text-sm font-medium text-zinc-300 transition hover:border-rose-900/50 hover:bg-rose-950/20 hover:text-rose-400"
+        >
+          <i data-lucide="log-out" class="h-4 w-4 text-rose-400"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="relative flex-1 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
+
+    <div class="relative mx-auto max-w-4xl space-y-8">
+      
+      <!-- Notification Banner -->
+      <div id="alertBox" class="hidden rounded-xl border p-4 text-sm transition-all duration-200">
+        <div class="flex items-center gap-3">
+          <i id="alertIcon" data-lucide="info" class="h-5 w-5 shrink-0"></i>
+          <span id="alertMessage" class="flex-1 font-medium"></span>
+          <button id="closeAlertBtn" class="text-zinc-400 hover:text-white">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- AVATAR & HEADER CARD -->
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 sm:p-8 backdrop-blur-sm shadow-xl">
+        <div class="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+          
+          <!-- Avatar container with hover upload -->
+          <div class="relative group">
+            <div id="avatarContainer" class="h-28 w-28 rounded-2xl overflow-hidden border-2 border-brand-500/40 bg-zinc-800 flex items-center justify-center shadow-lg shadow-brand-500/10">
+              <img id="avatarImage" src="" alt="Avatar" class="h-full w-full object-cover hidden">
+              <div id="avatarFallback" class="h-full w-full flex items-center justify-center text-3xl font-bold text-brand-400 bg-brand-500/10">
+                U
+              </div>
+            </div>
+
+            <!-- Upload overlay button -->
+            <button
+              id="triggerUploadBtn"
+              type="button"
+              title="Ganti Foto Profil"
+              class="absolute inset-0 rounded-2xl bg-zinc-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 text-white text-xs font-medium cursor-pointer"
+            >
+              <i data-lucide="camera" class="h-6 w-6 text-brand-400"></i>
+              <span>Ubah Foto</span>
+            </button>
+            <input type="file" id="avatarFileInput" accept="image/png, image/jpeg, image/webp" class="hidden">
+          </div>
+
+          <div class="flex-1 space-y-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <h1 id="profileHeaderName" class="text-2xl font-bold text-white">Memuat...</h1>
+              <span class="inline-flex items-center gap-1.5 self-center sm:self-auto rounded-full border border-brand-500/30 bg-brand-500/10 px-2.5 py-0.5 text-xs font-medium text-brand-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-brand-400"></span>
+                Petani Terverifikasi
+              </span>
+            </div>
+            <p id="profileHeaderEmail" class="text-sm text-zinc-400">memuat data...</p>
+            <div class="pt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
+              <button
+                id="btnChooseAvatar"
+                class="inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition"
+              >
+                <i data-lucide="upload" class="h-3.5 w-3.5 text-brand-400"></i>
+                <span id="uploadBtnText">Upload Foto Baru</span>
+                <span id="uploadSpinner" class="hidden"><i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin-custom"></i></span>
+              </button>
+              <p class="text-[11px] text-zinc-500 self-center">JPG, PNG, atau WEBP maks 5MB</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- CARD 1: EDIT PROFILE FORM -->
+        <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 backdrop-blur-sm shadow-xl space-y-5">
+          <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-4">
+            <div class="p-2 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
+              <i data-lucide="user-pen" class="h-5 w-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-semibold text-white">Informasi Akun</h2>
+              <p class="text-xs text-zinc-400">Perbarui nama lengkap tampilan Anda</p>
+            </div>
+          </div>
+
+          <form id="profileForm" class="space-y-4">
+            <div>
+              <label for="inputEmail" class="block text-xs font-medium text-zinc-400 mb-1.5">Alamat Email</label>
+              <input
+                type="email"
+                id="inputEmail"
+                disabled
+                class="w-full rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-2.5 text-sm text-zinc-400 cursor-not-allowed opacity-80"
+              >
+              <span class="text-[11px] text-zinc-500 mt-1 block">Email terikat secara permanen pada akun ini</span>
+            </div>
+
+            <div>
+              <label for="inputName" class="block text-xs font-medium text-zinc-300 mb-1.5">Nama Lengkap</label>
+              <input
+                type="text"
+                id="inputName"
+                required
+                minlength="2"
+                placeholder="Masukkan nama lengkap"
+                class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition"
+              >
+            </div>
+
+            <div class="pt-2">
+              <button
+                type="submit"
+                id="saveProfileBtn"
+                class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-zinc-950 font-semibold px-4 py-2.5 text-sm shadow-lg shadow-brand-500/20 transition disabled:opacity-50"
+              >
+                <i data-lucide="save" class="h-4 w-4"></i>
+                <span id="saveProfileBtnText">Simpan Perubahan</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- CARD 2: CHANGE PASSWORD FORM -->
+        <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 backdrop-blur-sm shadow-xl space-y-5">
+          <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-4">
+            <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <i data-lucide="shield-check" class="h-5 w-5"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-semibold text-white">Ganti Password</h2>
+              <p class="text-xs text-zinc-400">Wajib verifikasi dengan password saat ini</p>
+            </div>
+          </div>
+
+          <form id="passwordForm" class="space-y-4">
+            <div>
+              <label for="oldPassword" class="block text-xs font-medium text-zinc-300 mb-1.5">Password Lama</label>
+              <div class="relative">
+                <input
+                  type="password"
+                  id="oldPassword"
+                  required
+                  placeholder="Password lama Anda"
+                  class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition"
+                >
+                <button
+                  type="button"
+                  class="toggle-pass-btn absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  data-target="oldPassword"
+                >
+                  <i data-lucide="eye" class="h-4 w-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="newPassword" class="block text-xs font-medium text-zinc-300 mb-1.5">Password Baru</label>
+              <div class="relative">
+                <input
+                  type="password"
+                  id="newPassword"
+                  required
+                  minlength="6"
+                  placeholder="Minimal 6 karakter"
+                  class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition"
+                >
+                <button
+                  type="button"
+                  class="toggle-pass-btn absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  data-target="newPassword"
+                >
+                  <i data-lucide="eye" class="h-4 w-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="confirmPassword" class="block text-xs font-medium text-zinc-300 mb-1.5">Konfirmasi Password Baru</label>
+              <div class="relative">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  required
+                  minlength="6"
+                  placeholder="Ulangi password baru"
+                  class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition"
+                >
+                <button
+                  type="button"
+                  class="toggle-pass-btn absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  data-target="confirmPassword"
+                >
+                  <i data-lucide="eye" class="h-4 w-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button
+                type="submit"
+                id="changePasswordBtn"
+                class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-100 hover:bg-white active:scale-[0.99] text-zinc-950 font-semibold px-4 py-2.5 text-sm shadow-lg transition disabled:opacity-50"
+              >
+                <i data-lucide="key-round" class="h-4 w-4"></i>
+                <span id="changePasswordBtnText">Perbarui Password</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const authToken = localStorage.getItem('auth_token');
+
+    // UI Helper: Alert Banner
+    const alertBox = document.getElementById('alertBox');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertMessage = document.getElementById('alertMessage');
+    const closeAlertBtn = document.getElementById('closeAlertBtn');
+
+    function showAlert(message, type = 'success') {
+      alertBox.classList.remove('hidden', 'bg-emerald-950/40', 'border-emerald-800', 'text-emerald-200', 'bg-rose-950/40', 'border-rose-800', 'text-rose-200');
+      if (type === 'success') {
+        alertBox.classList.add('bg-emerald-950/40', 'border-emerald-800', 'text-emerald-200');
+        alertIcon.setAttribute('data-lucide', 'check-circle-2');
+      } else {
+        alertBox.classList.add('bg-rose-950/40', 'border-rose-800', 'text-rose-200');
+        alertIcon.setAttribute('data-lucide', 'alert-circle');
+      }
+      alertMessage.textContent = message;
+      lucide.createIcons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    closeAlertBtn.addEventListener('click', () => {
+      alertBox.classList.add('hidden');
+    });
+
+    // Toggle Password Visibility
+    document.querySelectorAll('.toggle-pass-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+          input.type = 'password';
+          icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+      });
+    });
+
+    // 1. Fetch User Profile
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('auth_token');
+          window.location.replace('/index.html');
+          return;
+        }
+
+        const result = await res.json();
+        if (!result.success) {
+          throw new Error(result.message || 'Gagal memuat profil');
+        }
+
+        const user = result.data;
+        document.getElementById('profileHeaderName').textContent = user.name;
+        document.getElementById('profileHeaderEmail').textContent = user.email;
+        document.getElementById('inputEmail').value = user.email;
+        document.getElementById('inputName').value = user.name;
+
+        updateAvatarDisplay(user.avatar, user.name);
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    }
+
+    function updateAvatarDisplay(avatarUrl, name) {
+      const img = document.getElementById('avatarImage');
+      const fallback = document.getElementById('avatarFallback');
+
+      if (avatarUrl) {
+        img.src = avatarUrl;
+        img.classList.remove('hidden');
+        fallback.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        fallback.classList.remove('hidden');
+        fallback.textContent = name ? name.trim().charAt(0).toUpperCase() : 'U';
+      }
+    }
+
+    // 2. Upload Avatar
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    const triggerUploadBtn = document.getElementById('triggerUploadBtn');
+    const btnChooseAvatar = document.getElementById('btnChooseAvatar');
+    const uploadSpinner = document.getElementById('uploadSpinner');
+    const uploadBtnText = document.getElementById('uploadBtnText');
+
+    triggerUploadBtn.addEventListener('click', () => avatarFileInput.click());
+    btnChooseAvatar.addEventListener('click', () => avatarFileInput.click());
+
+    avatarFileInput.addEventListener('change', async () => {
+      const file = avatarFileInput.files[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        showAlert('Ukuran berkas melebihi batas 5MB', 'error');
+        avatarFileInput.value = '';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      uploadSpinner.classList.remove('hidden');
+      uploadBtnText.textContent = 'Mengunggah...';
+      btnChooseAvatar.disabled = true;
+
+      try {
+        const res = await fetch('/api/user/avatar', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: formData
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Gagal mengunggah avatar');
+        }
+
+        showAlert('Foto profil berhasil diperbarui!', 'success');
+        updateAvatarDisplay(result.data.avatar, document.getElementById('inputName').value);
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        uploadSpinner.classList.add('hidden');
+        uploadBtnText.textContent = 'Upload Foto Baru';
+        btnChooseAvatar.disabled = false;
+        avatarFileInput.value = '';
+      }
+    });
+
+    // 3. Update Profile Form
+    const profileForm = document.getElementById('profileForm');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const saveProfileBtnText = document.getElementById('saveProfileBtnText');
+
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('inputName').value.trim();
+
+      saveProfileBtn.disabled = true;
+      saveProfileBtnText.textContent = 'Menyimpan...';
+
+      try {
+        const res = await fetch('/api/user/profile', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Gagal memperbarui profil');
+        }
+
+        showAlert('Profil berhasil diperbarui!', 'success');
+        document.getElementById('profileHeaderName').textContent = result.data.name;
+        if (!result.data.avatar) {
+          updateAvatarDisplay(null, result.data.name);
+        }
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        saveProfileBtn.disabled = false;
+        saveProfileBtnText.textContent = 'Simpan Perubahan';
+      }
+    });
+
+    // 4. Change Password Form
+    const passwordForm = document.getElementById('passwordForm');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const changePasswordBtnText = document.getElementById('changePasswordBtnText');
+
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        showAlert('Konfirmasi password baru tidak cocok', 'error');
+        return;
+      }
+
+      if (oldPassword === newPassword) {
+        showAlert('Password baru tidak boleh sama dengan password lama', 'error');
+        return;
+      }
+
+      changePasswordBtn.disabled = true;
+      changePasswordBtnText.textContent = 'Memproses...';
+
+      try {
+        const res = await fetch('/api/user/change_password', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ oldPassword, newPassword, confirmPassword })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Gagal mengganti password');
+        }
+
+        showAlert('Password berhasil diperbarui!', 'success');
+        passwordForm.reset();
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        changePasswordBtn.disabled = false;
+        changePasswordBtnText.textContent = 'Perbarui Password';
+      }
+    });
+
+    // 5. Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch('/api/users/logout', {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+      } catch (e) {
+        console.error('Logout error:', e);
+      } finally {
+        localStorage.removeItem('auth_token');
+        window.location.replace('/index.html');
+      }
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>
+

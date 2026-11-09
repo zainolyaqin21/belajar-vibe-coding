@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { users, sessions } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { AppError } from "../utils/app-error.js";
+import { processPhotoUpload, deleteUploadedPhoto } from "../utils/upload-helper.js";
 
 /**
  * Mencari user berdasarkan alamat email
@@ -114,6 +115,7 @@ export async function getCurrentUser(token) {
       id: users.id,
       name: users.name,
       email: users.email,
+      avatar: users.avatar,
       createdAt: users.createdAt,
     })
     .from(sessions)
@@ -129,6 +131,7 @@ export async function getCurrentUser(token) {
     id: result.id,
     name: result.name,
     email: result.email,
+    avatar: result.avatar || null,
     created_at: result.createdAt,
   };
 }
@@ -154,4 +157,132 @@ export async function logoutUser(token) {
   }
 
   await db.delete(sessions).where(eq(sessions.token, token));
+}
+
+/**
+ * Mengambil detail profil user berdasarkan ID
+ * @param {number} userId
+ * @returns {Promise<object>}
+ */
+export async function getUserProfile(userId) {
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      avatar: users.avatar,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) {
+    throw new AppError("Pengguna tidak ditemukan", 404);
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar || null,
+    created_at: user.createdAt,
+  };
+}
+
+/**
+ * Memperbarui nama/data profil user
+ * @param {number} userId
+ * @param {object} param
+ * @param {string} param.name
+ * @returns {Promise<object>}
+ */
+export async function updateUserProfile(userId, { name }) {
+  await db
+    .update(users)
+    .set({ name: name.trim() })
+    .where(eq(users.id, userId));
+
+  return await getUserProfile(userId);
+}
+
+/**
+ * Memperbarui avatar user (hapus file fisik lama jika ada sebelum mengganti ke foto baru)
+ * @param {number} userId
+ * @param {File|Blob|string|null|undefined} fileOrBlob
+ * @returns {Promise<{ avatar: string }>}
+ */
+export async function updateUserAvatar(userId, fileOrBlob) {
+  const [currentUser] = await db
+    .select({ avatar: users.avatar })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!currentUser) {
+    throw new AppError("Pengguna tidak ditemukan", 404);
+  }
+
+  const newAvatarUrl = await processPhotoUpload(fileOrBlob);
+  if (!newAvatarUrl) {
+    throw new AppError("Berkas foto tidak valid atau kosong", 400);
+  }
+
+  // Hapus foto lama yang telah digunakan sebelum mengganti ke foto baru
+  if (currentUser.avatar) {
+    await deleteUploadedPhoto(currentUser.avatar);
+  }
+
+  await db
+    .update(users)
+    .set({ avatar: newAvatarUrl })
+    .where(eq(users.id, userId));
+
+  return { avatar: newAvatarUrl };
+}
+
+/**
+ * Mengubah password user dengan verifikasi password lama
+ * @param {number} userId
+ * @param {object} param
+ * @param {string} param.oldPassword
+ * @param {string} param.newPassword
+ * @param {string} [param.confirmPassword]
+ * @returns {Promise<boolean>}
+ */
+export async function changeUserPassword(userId, { oldPassword, newPassword, confirmPassword }) {
+  if (confirmPassword && newPassword !== confirmPassword) {
+    throw new AppError("Konfirmasi password baru tidak cocok", 400);
+  }
+
+  if (oldPassword === newPassword) {
+    throw new AppError("Password baru tidak boleh sama dengan password lama", 400);
+  }
+
+  const [user] = await db
+    .select({ password: users.password })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) {
+    throw new AppError("Pengguna tidak ditemukan", 404);
+  }
+
+  const isMatch = await Bun.password.verify(oldPassword, user.password);
+  if (!isMatch) {
+    throw new AppError("Password lama tidak sesuai", 400);
+  }
+
+  const hashedPassword = await Bun.password.hash(newPassword, {
+    algorithm: "bcrypt",
+    cost: 10,
+  });
+
+  await db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, userId));
+
+  return true;
 }

@@ -15,6 +15,13 @@
       "when": 1794232907232,
       "tag": "0001_breezy_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1794235922183,
+      "tag": "0002_nifty_saracen",
+      "breakpoints": true
     }
   ]
 }

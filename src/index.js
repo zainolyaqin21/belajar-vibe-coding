@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { staticPlugin } from "@elysiajs/static";
 import { testDbConnection } from "./db/index.js";
-import { usersRoute } from "./routes/users-route.js";
+import { usersRoute, userProfileRoute } from "./routes/users-route.js";
 import { plantsRoute } from "./routes/plants-route.js";
 import { plantLogsRoute, plantLogsCrudRoute } from "./routes/plant-logs-route.js";
 
@@ -19,6 +19,7 @@ const app = new Elysia()
   .get("/index.html", () => Bun.file("public/index.html"))
   .get("/register.html", () => Bun.file("public/register.html"))
   .get("/dashboard.html", () => Bun.file("public/dashboard.html"))
+  .get("/profile.html", () => Bun.file("public/profile.html"))
   .get("/api/info", () => ({
     message: "Belajar Vibe Coding API is running!",
     timestamp: new Date().toISOString(),
@@ -33,6 +34,7 @@ const app = new Elysia()
     };
   })
   .use(usersRoute)
+  .use(userProfileRoute)
   .use(plantsRoute)
   .use(plantLogsCrudRoute)
   .use(plantLogsRoute)
