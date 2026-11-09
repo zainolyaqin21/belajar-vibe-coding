@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard &mdash; Belajar Vibe Coding</title>
+  <title>Dashboard AgriTracker &mdash; Belajar Vibe Coding</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -65,15 +65,15 @@
   <!-- NAVBAR HEADER -->
   <!-- ======================================================== -->
   <header class="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       
       <!-- Brand Logo -->
       <div class="flex items-center gap-3">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-zinc-950 font-bold shadow-md shadow-brand-500/20">
-          <i data-lucide="sparkles" class="h-4 w-4 stroke-[2.5]"></i>
+          <i data-lucide="sprout" class="h-5 w-5 stroke-[2.5]"></i>
         </div>
         <div>
-          <span class="text-base font-semibold tracking-tight text-white">VibeCoding</span>
+          <span class="text-base font-semibold tracking-tight text-white">AgriTracker</span>
           <span class="ml-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-400">Dashboard</span>
         </div>
       </div>
@@ -98,10 +98,10 @@
   <!-- ======================================================== -->
   <!-- MAIN CONTENT AREA -->
   <!-- ======================================================== -->
-  <main class="relative flex-1 py-10 px-4 sm:px-6 lg:px-8">
+  <main class="relative flex-1 py-8 px-4 sm:px-6 lg:px-8">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
 
-    <div class="relative mx-auto max-w-4xl space-y-6">
+    <div class="relative mx-auto max-w-7xl space-y-8">
       
       <!-- Notification Banner -->
       <div id="alertBox" class="hidden rounded-lg border px-4 py-3 text-sm transition-all duration-200">
@@ -111,92 +111,239 @@
         </div>
       </div>
 
-      <!-- Welcome Banner Card -->
-      <div class="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950 p-6 sm:p-8 shadow-xl backdrop-blur-sm">
+      <!-- Top Summary & Profile (Collapsible Accordion / Compact) -->
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6 backdrop-blur-sm shadow-xl">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-400">
-              <span class="h-2 w-2 rounded-full bg-brand-400 animate-pulse"></span>
-              Sesi Autentikasi Aktif
+          <div class="flex items-center gap-4">
+            <div class="h-12 w-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 shadow-inner">
+              <i data-lucide="user-check" class="h-6 w-6"></i>
             </div>
-            <h1 class="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Selamat Datang, <span id="welcomeUserName" class="text-brand-400">Pengguna</span>!
-            </h1>
-            <p class="mt-1 text-sm text-zinc-400">
-              Anda berhasil masuk ke sistem yang terproteksi dengan session token UUID.
-            </p>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  Selamat Datang, <span id="welcomeUserName" class="text-brand-400">Pengguna</span>!
+                </h1>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 px-2.5 py-0.5 text-[11px] font-medium text-brand-400">
+                  <span class="h-1.5 w-1.5 rounded-full bg-brand-400 animate-pulse"></span>
+                  Aktif
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm text-zinc-400 mt-0.5" id="userEmailText">
+                Memuat data pengguna...
+              </p>
+            </div>
           </div>
-          <div class="shrink-0 flex items-center">
-            <div class="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-brand-400 shadow-inner">
-              <i data-lucide="shield-check" class="h-8 w-8 stroke-[1.75]"></i>
-            </div>
+          
+          <div class="flex items-center gap-3">
+            <button
+              id="openAddPlantBtn"
+              class="inline-flex items-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-zinc-950 font-semibold px-4 py-2.5 text-xs sm:text-sm shadow-lg shadow-brand-500/20 transition"
+            >
+              <i data-lucide="plus-circle" class="h-4 w-4 stroke-[2.5]"></i>
+              Tambah Tanaman Baru
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- User Profile & System Status Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- ======================================================== -->
+      <!-- AGRITRACKER MAIN WORKSPACE: Plants & Logs -->
+      <!-- ======================================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        <!-- Profile Card -->
-        <div class="md:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 shadow-sm">
-          <h2 class="text-base font-semibold text-white flex items-center gap-2">
-            <i data-lucide="user" class="h-4 w-4 text-brand-400"></i>
-            Informasi Profil User
-          </h2>
-          <p class="mt-1 text-xs text-zinc-500">
-            Data diambil secara real-time dari endpoint <code class="text-zinc-300 font-mono">GET /api/users/current</code>.
-          </p>
-
-          <!-- Loading Skeleton -->
-          <div id="profileLoading" class="mt-6 space-y-4">
-            <div class="h-4 w-3/4 bg-zinc-800/60 rounded animate-pulse"></div>
-            <div class="h-4 w-1/2 bg-zinc-800/60 rounded animate-pulse"></div>
-            <div class="h-4 w-2/3 bg-zinc-800/60 rounded animate-pulse"></div>
+        <!-- ========================================== -->
+        <!-- LEFT COLUMN: DAFTAR TANAMAN (col-span-5) -->
+        <!-- ========================================== -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-lucide="sprout" class="h-5 w-5 text-brand-400"></i>
+              <h2 class="text-lg font-semibold text-white">Daftar Tanaman</h2>
+              <span id="plantsCountBadge" class="rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-mono text-zinc-400">0</span>
+            </div>
+            <button
+              id="refreshPlantsBtn"
+              title="Refresh Tanaman"
+              class="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+            >
+              <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+            </button>
           </div>
 
-          <!-- Profile Details Table/List -->
-          <div id="profileDetails" class="mt-6 hidden divide-y divide-zinc-800/80 border-t border-zinc-800/80 text-sm">
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">Nama Lengkap</span>
-              <span id="profileName" class="font-medium text-white">-</span>
+          <!-- Loading state -->
+          <div id="plantsLoading" class="space-y-3">
+            <div class="h-20 bg-zinc-900/60 rounded-xl border border-zinc-800 animate-pulse"></div>
+            <div class="h-20 bg-zinc-900/60 rounded-xl border border-zinc-800 animate-pulse"></div>
+          </div>
+
+          <!-- Empty state -->
+          <div id="plantsEmpty" class="hidden rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-8 text-center">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 text-zinc-500">
+              <i data-lucide="trees" class="h-6 w-6"></i>
             </div>
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">Alamat Email</span>
-              <span id="profileEmail" class="font-medium text-white">-</span>
-            </div>
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">User ID</span>
-              <span id="profileId" class="font-mono text-zinc-300">-</span>
-            </div>
-            <div class="py-3 flex justify-between">
-              <span class="text-zinc-400">Terdaftar Sejak</span>
-              <span id="profileCreatedAt" class="text-zinc-300">-</span>
-            </div>
+            <h3 class="mt-3 text-sm font-semibold text-zinc-300">Belum Ada Tanaman</h3>
+            <p class="mt-1 text-xs text-zinc-500 max-w-xs mx-auto">
+              Mulai lacak jurnal pertumbuhan tanaman Anda dengan menambahkan data tanaman pertama.
+            </p>
+            <button
+              onclick="document.getElementById('openAddPlantBtn').click()"
+              class="mt-4 inline-flex items-center gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-1.5 text-xs font-medium text-brand-400 hover:bg-brand-500/20 transition"
+            >
+              <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+              Tambah Tanaman
+            </button>
+          </div>
+
+          <!-- Plants List Container -->
+          <div id="plantsList" class="space-y-3">
+            <!-- Dynamic Plants Items will be inserted here -->
           </div>
         </div>
 
-        <!-- System Status Card -->
-        <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <h2 class="text-base font-semibold text-white flex items-center gap-2">
-              <i data-lucide="activity" class="h-4 w-4 text-brand-400"></i>
-              Status Keamanan
-            </h2>
-            <div class="mt-4 space-y-3 text-xs">
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div class="text-zinc-500 uppercase tracking-wider text-[10px]">Token Storage</div>
-                <div class="mt-1 font-mono text-zinc-300 truncate">localStorage: auth_token</div>
-              </div>
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div class="text-zinc-500 uppercase tracking-wider text-[10px]">Auth Type</div>
-                <div class="mt-1 font-medium text-brand-400">Bearer Token Header</div>
-              </div>
+        <!-- ========================================== -->
+        <!-- RIGHT COLUMN: JURNAL & LOG (col-span-7) -->
+        <!-- ========================================== -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- When No Plant is Selected -->
+          <div id="noPlantSelectedBox" class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-12 text-center">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-600">
+              <i data-lucide="book-open" class="h-8 w-8"></i>
             </div>
+            <h3 class="mt-4 text-base font-semibold text-zinc-200">Pilih Tanaman untuk Melihat Jurnal</h3>
+            <p class="mt-1.5 text-xs text-zinc-500 max-w-sm mx-auto">
+              Klik salah satu tanaman pada daftar di sebelah kiri untuk melihat riwayat pertumbuhan, menambahkan catatan, atau mengunggah foto log.
+            </p>
           </div>
 
-          <div class="pt-4 border-t border-zinc-800/80 mt-4 text-[11px] text-zinc-500">
-            Koneksi aktif ke Bun &bull; ElysiaJS
+          <!-- When Plant is Selected -->
+          <div id="activePlantWorkspace" class="hidden space-y-4">
+            
+            <!-- Plant Detail Header Card -->
+            <div class="rounded-2xl border border-zinc-800 bg-gradient-to-r from-zinc-900/80 to-zinc-950 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="rounded-md border border-brand-500/40 bg-brand-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-brand-400" id="activePlantIdTag">ID #1</span>
+                  <h3 class="text-lg font-bold text-white" id="activePlantName">Nama Tanaman</h3>
+                </div>
+                <div class="flex items-center gap-3 mt-1.5 text-xs text-zinc-400">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="calendar" class="h-3.5 w-3.5 text-zinc-500"></i>
+                    Tgl Tanam: <strong class="text-zinc-300 ml-1 font-normal" id="activePlantTanggal">-</strong>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action buttons for selected plant -->
+              <div class="flex items-center gap-2">
+                <button
+                  id="openAddLogBtn"
+                  class="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-95 text-zinc-950 font-semibold px-3 py-1.5 text-xs shadow-md shadow-brand-500/20 transition"
+                >
+                  <i data-lucide="image-plus" class="h-3.5 w-3.5"></i>
+                  Tambah Log & Foto
+                </button>
+              </div>
+            </div>
+
+            <!-- Form Tambah Log (Inline Collapsible) -->
+            <div id="addLogCard" class="hidden rounded-2xl border border-brand-500/30 bg-zinc-900/90 p-5 shadow-xl transition-all">
+              <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+                <h4 class="text-sm font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="plus-circle" class="h-4 w-4 text-brand-400"></i>
+                  Catatan Jurnal Baru
+                </h4>
+                <button id="closeAddLogBtn" class="text-zinc-500 hover:text-zinc-300">
+                  <i data-lucide="x" class="h-4 w-4"></i>
+                </button>
+              </div>
+
+              <form id="addLogForm" class="mt-4 space-y-4">
+                <div>
+                  <label class="block text-xs font-medium text-zinc-300 mb-1">Catatan Perkembangan <span class="text-rose-400">*</span></label>
+                  <textarea
+                    id="addLogCatatan"
+                    rows="3"
+                    required
+                    placeholder="Contoh: Daun baru mulai tumbuh, tinggi bertambah 2cm, tanah disiram..."
+                    class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-zinc-300 mb-1">Foto Tanaman (Opsional)</label>
+                  <div class="flex items-center gap-3">
+                    <input
+                      type="file"
+                      id="addLogFoto"
+                      accept="image/*"
+                      class="block w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700 file:cursor-pointer"
+                    />
+                  </div>
+                  <!-- Preview -->
+                  <div id="addLogFotoPreviewWrapper" class="mt-2 hidden">
+                    <img id="addLogFotoPreview" src="" alt="Preview Foto" class="h-28 w-28 object-cover rounded-xl border border-zinc-700 shadow-md">
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    onclick="document.getElementById('addLogCard').classList.add('hidden')"
+                    class="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    id="submitAddLogBtn"
+                    class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-brand-600 disabled:opacity-50"
+                  >
+                    <span id="submitAddLogSpinner" class="hidden">
+                      <i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin-custom"></i>
+                    </span>
+                    <span>Simpan Jurnal</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Logs List Section -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <i data-lucide="history" class="h-3.5 w-3.5"></i>
+                  Riwayat Catatan Pertumbuhan
+                </h4>
+                <span id="logsCountBadge" class="text-xs text-zinc-500 font-mono">0 catatan</span>
+              </div>
+
+              <!-- Logs Loading Skeleton -->
+              <div id="logsLoading" class="hidden space-y-3">
+                <div class="h-24 bg-zinc-900/60 rounded-xl border border-zinc-800 animate-pulse"></div>
+                <div class="h-24 bg-zinc-900/60 rounded-xl border border-zinc-800 animate-pulse"></div>
+              </div>
+
+              <!-- Logs Empty State -->
+              <div id="logsEmpty" class="hidden rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-8 text-center">
+                <i data-lucide="clipboard-list" class="mx-auto h-8 w-8 text-zinc-600"></i>
+                <p class="mt-2 text-xs font-medium text-zinc-400">Belum ada catatan jurnal untuk tanaman ini.</p>
+                <button
+                  onclick="document.getElementById('openAddLogBtn').click()"
+                  class="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-400 hover:underline"
+                >
+                  <i data-lucide="plus" class="h-3 w-3"></i> Tambah catatan pertama
+                </button>
+              </div>
+
+              <!-- Logs Timeline / List -->
+              <div id="logsList" class="space-y-3">
+                <!-- Dynamic logs cards will be inserted here -->
+              </div>
+            </div>
+
           </div>
+
         </div>
 
       </div>
@@ -205,18 +352,212 @@
   </main>
 
   <!-- ======================================================== -->
-  <!-- JAVASCRIPT: Auth Guard, Fetch Current User, and Logout -->
+  <!-- MODAL: TAMBAH TANAMAN -->
+  <!-- ======================================================== -->
+  <div id="addPlantModal" class="fixed inset-0 z-50 hidden bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i data-lucide="sprout" class="h-5 w-5 text-brand-400"></i>
+          Tambah Tanaman Baru
+        </h3>
+        <button onclick="closeModal('addPlantModal')" class="text-zinc-500 hover:text-white">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <form id="addPlantForm" class="mt-4 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-zinc-300 mb-1">Nama Tanaman <span class="text-rose-400">*</span></label>
+          <input
+            type="text"
+            id="addPlantName"
+            required
+            placeholder="Contoh: Monstera Deliciosa, Tomat Cherry"
+            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-zinc-300 mb-1">Tanggal Mulai Tanam <span class="text-rose-400">*</span></label>
+          <input
+            type="date"
+            id="addPlantTanggal"
+            required
+            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+          <button
+            type="button"
+            onclick="closeModal('addPlantModal')"
+            class="rounded-lg border border-zinc-800 px-4 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-800"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            id="submitAddPlantBtn"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-brand-600 disabled:opacity-50"
+          >
+            <span id="submitAddPlantSpinner" class="hidden">
+              <i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin-custom"></i>
+            </span>
+            <span>Simpan Tanaman</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EDIT TANAMAN -->
+  <!-- ======================================================== -->
+  <div id="editPlantModal" class="fixed inset-0 z-50 hidden bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i data-lucide="pencil" class="h-4 w-4 text-brand-400"></i>
+          Edit Data Tanaman
+        </h3>
+        <button onclick="closeModal('editPlantModal')" class="text-zinc-500 hover:text-white">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <form id="editPlantForm" class="mt-4 space-y-4">
+        <input type="hidden" id="editPlantId" />
+        
+        <div>
+          <label class="block text-xs font-medium text-zinc-300 mb-1">Nama Tanaman <span class="text-rose-400">*</span></label>
+          <input
+            type="text"
+            id="editPlantName"
+            required
+            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-zinc-300 mb-1">Tanggal Mulai Tanam <span class="text-rose-400">*</span></label>
+          <input
+            type="date"
+            id="editPlantTanggal"
+            required
+            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+          <button
+            type="button"
+            onclick="closeModal('editPlantModal')"
+            class="rounded-lg border border-zinc-800 px-4 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-800"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            id="submitEditPlantBtn"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-brand-600 disabled:opacity-50"
+          >
+            <span id="submitEditPlantSpinner" class="hidden">
+              <i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin-custom"></i>
+            </span>
+            <span>Perbarui Data</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EDIT LOG -->
+  <!-- ======================================================== -->
+  <div id="editLogModal" class="fixed inset-0 z-50 hidden bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <i data-lucide="edit-3" class="h-4 w-4 text-brand-400"></i>
+          Edit Catatan Jurnal Log
+        </h3>
+        <button onclick="closeModal('editLogModal')" class="text-zinc-500 hover:text-white">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <form id="editLogForm" class="mt-4 space-y-4">
+        <input type="hidden" id="editLogId" />
+        
+        <div>
+          <label class="block text-xs font-medium text-zinc-300 mb-1">Catatan Perkembangan <span class="text-rose-400">*</span></label>
+          <textarea
+            id="editLogCatatan"
+            rows="3"
+            required
+            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs sm:text-sm text-zinc-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-zinc-300 mb-1">Ganti Foto Tanaman (Opsional)</label>
+          <input
+            type="file"
+            id="editLogFoto"
+            accept="image/*"
+            class="block w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700 file:cursor-pointer"
+          />
+          <div id="editLogFotoPreviewWrapper" class="mt-2 hidden">
+            <p class="text-[10px] text-zinc-500 mb-1">Foto saat ini / terpilih:</p>
+            <img id="editLogFotoPreview" src="" alt="Preview Foto" class="h-24 w-24 object-cover rounded-xl border border-zinc-700 shadow-md">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+          <button
+            type="button"
+            onclick="closeModal('editLogModal')"
+            class="rounded-lg border border-zinc-800 px-4 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-800"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            id="submitEditLogBtn"
+            class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-brand-600 disabled:opacity-50"
+          >
+            <span id="submitEditLogSpinner" class="hidden">
+              <i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin-custom"></i>
+            </span>
+            <span>Simpan Perubahan</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: IMAGE VIEWER / PREVIEW -->
+  <!-- ======================================================== -->
+  <div id="imageViewerModal" class="fixed inset-0 z-50 hidden bg-zinc-950/90 backdrop-blur-md flex items-center justify-center p-4" onclick="closeModal('imageViewerModal')">
+    <div class="relative max-w-3xl max-h-[90vh] p-2" onclick="event.stopPropagation()">
+      <button onclick="closeModal('imageViewerModal')" class="absolute -top-10 right-0 text-zinc-400 hover:text-white p-2">
+        <i data-lucide="x" class="h-6 w-6"></i>
+      </button>
+      <img id="imageViewerTarget" src="" alt="Foto Tanaman" class="max-h-[80vh] w-auto rounded-2xl border border-zinc-800 shadow-2xl object-contain">
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT: Full Integration (Auth, Plants & Logs CRUD) -->
   <!-- ======================================================== -->
   <script>
     lucide.createIcons();
 
+    // DOM Elements Auth
     const welcomeUserName = document.getElementById('welcomeUserName');
-    const profileLoading = document.getElementById('profileLoading');
-    const profileDetails = document.getElementById('profileDetails');
-    const profileName = document.getElementById('profileName');
-    const profileEmail = document.getElementById('profileEmail');
-    const profileId = document.getElementById('profileId');
-    const profileCreatedAt = document.getElementById('profileCreatedAt');
+    const userEmailText = document.getElementById('userEmailText');
     const logoutBtn = document.getElementById('logoutBtn');
     const logoutSpinner = document.getElementById('logoutSpinner');
     const logoutIcon = document.getElementById('logoutIcon');
@@ -225,9 +566,46 @@
     const alertIcon = document.getElementById('alertIcon');
     const alertMessage = document.getElementById('alertMessage');
 
+    // DOM Elements Plants
+    const plantsList = document.getElementById('plantsList');
+    const plantsLoading = document.getElementById('plantsLoading');
+    const plantsEmpty = document.getElementById('plantsEmpty');
+    const plantsCountBadge = document.getElementById('plantsCountBadge');
+    const refreshPlantsBtn = document.getElementById('refreshPlantsBtn');
+    const openAddPlantBtn = document.getElementById('openAddPlantBtn');
+    const addPlantForm = document.getElementById('addPlantForm');
+    const editPlantForm = document.getElementById('editPlantForm');
+
+    // DOM Elements Logs
+    const noPlantSelectedBox = document.getElementById('noPlantSelectedBox');
+    const activePlantWorkspace = document.getElementById('activePlantWorkspace');
+    const activePlantName = document.getElementById('activePlantName');
+    const activePlantIdTag = document.getElementById('activePlantIdTag');
+    const activePlantTanggal = document.getElementById('activePlantTanggal');
+    const openAddLogBtn = document.getElementById('openAddLogBtn');
+    const addLogCard = document.getElementById('addLogCard');
+    const closeAddLogBtn = document.getElementById('closeAddLogBtn');
+    const addLogForm = document.getElementById('addLogForm');
+    const addLogFoto = document.getElementById('addLogFoto');
+    const addLogFotoPreview = document.getElementById('addLogFotoPreview');
+    const addLogFotoPreviewWrapper = document.getElementById('addLogFotoPreviewWrapper');
+    const logsList = document.getElementById('logsList');
+    const logsLoading = document.getElementById('logsLoading');
+    const logsEmpty = document.getElementById('logsEmpty');
+    const logsCountBadge = document.getElementById('logsCountBadge');
+    const editLogForm = document.getElementById('editLogForm');
+    const editLogFoto = document.getElementById('editLogFoto');
+    const editLogFotoPreview = document.getElementById('editLogFotoPreview');
+    const editLogFotoPreviewWrapper = document.getElementById('editLogFotoPreviewWrapper');
+
+    // App State
+    let currentPlants = [];
+    let selectedPlant = null;
+    let currentLogs = [];
+
+    // Helper: Show Alert
     function showAlert(type, message) {
       alertBox.classList.remove('hidden', 'border-rose-900/50', 'bg-rose-950/40', 'text-rose-300', 'border-brand-900/50', 'bg-brand-950/40', 'text-brand-300');
-      
       if (type === 'error') {
         alertBox.classList.add('border-rose-900/50', 'bg-rose-950/40', 'text-rose-300');
         alertIcon.setAttribute('data-lucide', 'alert-circle');
@@ -237,9 +615,31 @@
       }
       alertMessage.textContent = message;
       lucide.createIcons();
+
+      setTimeout(() => {
+        alertBox.classList.add('hidden');
+      }, 5000);
     }
 
-    // Ambil data profil user saat ini
+    // Modal Helpers
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // Image Preview Helper
+    function viewImage(url) {
+      const modal = document.getElementById('imageViewerModal');
+      const target = document.getElementById('imageViewerTarget');
+      target.src = url;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    // Auth & Current User
     async function loadCurrentUser() {
       const authToken = localStorage.getItem('auth_token');
       if (!authToken) {
@@ -249,14 +649,10 @@
 
       try {
         const response = await fetch('/api/users/current', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
+          headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
         if (!response.ok) {
-          // Token tidak valid atau sesi kadaluarsa
           localStorage.removeItem('auth_token');
           window.location.replace('/index.html');
           return;
@@ -264,52 +660,571 @@
 
         const result = await response.json();
         const user = result.data;
-
-        // Render data user
         welcomeUserName.textContent = user.name || 'Pengguna';
-        profileName.textContent = user.name || '-';
-        profileEmail.textContent = user.email || '-';
-        profileId.textContent = `#${user.id || '-'}`;
-        profileCreatedAt.textContent = user.created_at ? new Date(user.created_at).toLocaleString('id-ID') : '-';
-
-        profileLoading.classList.add('hidden');
-        profileDetails.classList.remove('hidden');
+        userEmailText.textContent = `${user.email} (Terdaftar sejak: ${user.created_at ? new Date(user.created_at).toLocaleDateString('id-ID') : '-'})`;
       } catch (err) {
-        console.error('Error fetching current user:', err);
-        showAlert('error', 'Gagal memuat profil pengguna dari server.');
+        console.error('Error fetching user:', err);
       }
     }
 
-    // Aksi Logout
+    // Logout
     logoutBtn.addEventListener('click', async () => {
       const authToken = localStorage.getItem('auth_token');
       logoutBtn.disabled = true;
       logoutSpinner.classList.remove('hidden');
       logoutIcon.classList.add('hidden');
       logoutText.textContent = 'Memproses...';
-      lucide.createIcons();
 
       if (authToken) {
         try {
           await fetch('/api/users/logout', {
             method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${authToken}`
-            }
+            headers: { 'Authorization': `Bearer ${authToken}` }
           });
-        } catch (err) {
-          console.warn('Logout network request warning:', err);
-        }
+        } catch (e) {}
       }
 
-      // Bersihkan session di client dan redirect
       localStorage.removeItem('auth_token');
       window.location.replace('/index.html');
     });
 
-    // Jalankan pengambilan profil
+    // ==========================================
+    // PLANTS OPERATIONS
+    // ==========================================
+
+    // Fetch All Plants
+    async function fetchPlants() {
+      plantsLoading.classList.remove('hidden');
+      plantsEmpty.classList.add('hidden');
+      plantsList.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/plants');
+        const result = await res.json();
+
+        plantsLoading.classList.add('hidden');
+        if (result.success && Array.isArray(result.data)) {
+          currentPlants = result.data;
+          plantsCountBadge.textContent = currentPlants.length;
+
+          if (currentPlants.length === 0) {
+            plantsEmpty.classList.remove('hidden');
+            noPlantSelectedBox.classList.remove('hidden');
+            activePlantWorkspace.classList.add('hidden');
+            selectedPlant = null;
+          } else {
+            renderPlantsList();
+            // Automatically select first plant if none selected
+            if (!selectedPlant || !currentPlants.some(p => p.id === selectedPlant.id)) {
+              selectPlant(currentPlants[0]);
+            } else {
+              // Update selected plant reference
+              const refreshed = currentPlants.find(p => p.id === selectedPlant.id);
+              if (refreshed) selectPlant(refreshed);
+            }
+          }
+        } else {
+          showAlert('error', result.message || 'Gagal memuat daftar tanaman');
+        }
+      } catch (err) {
+        plantsLoading.classList.add('hidden');
+        console.error(err);
+        showAlert('error', 'Koneksi ke server gagal saat memuat tanaman.');
+      }
+    }
+
+    // Render Plants List
+    function renderPlantsList() {
+      plantsList.innerHTML = '';
+      currentPlants.forEach(plant => {
+        const isSelected = selectedPlant && selectedPlant.id === plant.id;
+        const card = document.createElement('div');
+        card.className = `group rounded-2xl border p-4 transition-all cursor-pointer ${
+          isSelected 
+            ? 'border-brand-500/60 bg-brand-950/20 shadow-lg shadow-brand-500/5' 
+            : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/80'
+        }`;
+
+        const tanggalStr = plant.tanggal ? new Date(plant.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex-1 min-w-0" onclick="window.handleSelectPlant(${plant.id})">
+              <div class="flex items-center gap-2">
+                <span class="rounded-full ${isSelected ? 'bg-brand-500 text-zinc-950' : 'bg-zinc-800 text-zinc-400'} px-2 py-0.5 text-[10px] font-mono font-semibold">
+                  #${plant.id}
+                </span>
+                <h4 class="text-sm font-semibold truncate ${isSelected ? 'text-brand-300' : 'text-white'}">
+                  ${escapeHtml(plant.name)}
+                </h4>
+              </div>
+              <p class="mt-1 text-xs text-zinc-400 flex items-center gap-1.5">
+                <i data-lucide="calendar" class="h-3 w-3 text-zinc-500"></i>
+                Tgl Tanam: ${tanggalStr}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <button
+                onclick="event.stopPropagation(); window.openEditPlantModal(${plant.id})"
+                title="Edit Tanaman"
+                class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+              >
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </button>
+              <button
+                onclick="event.stopPropagation(); window.handleDeletePlant(${plant.id}, '${escapeHtml(plant.name)}')"
+                title="Hapus Tanaman"
+                class="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-950/40 transition"
+              >
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        plantsList.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Select Plant
+    function selectPlant(plant) {
+      selectedPlant = plant;
+      renderPlantsList();
+
+      noPlantSelectedBox.classList.add('hidden');
+      activePlantWorkspace.classList.remove('hidden');
+
+      activePlantIdTag.textContent = `ID #${plant.id}`;
+      activePlantName.textContent = plant.name;
+      const tgl = plant.tanggal ? new Date(plant.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-';
+      activePlantTanggal.textContent = tgl;
+
+      fetchPlantLogs(plant.id);
+    }
+    window.handleSelectPlant = (id) => {
+      const found = currentPlants.find(p => p.id === id);
+      if (found) selectPlant(found);
+    };
+
+    // Open Add Plant Modal
+    openAddPlantBtn.addEventListener('click', () => {
+      addPlantForm.reset();
+      // Set default date to today
+      document.getElementById('addPlantTanggal').value = new Date().toISOString().split('T')[0];
+      openModal('addPlantModal');
+    });
+
+    // Submit Add Plant
+    addPlantForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitAddPlantBtn');
+      const spinner = document.getElementById('submitAddPlantSpinner');
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      const name = document.getElementById('addPlantName').value.trim();
+      const tanggal = document.getElementById('addPlantTanggal').value;
+
+      try {
+        const res = await fetch('/api/plants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, tanggal })
+        });
+        const result = await res.json();
+
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+
+        if (res.ok && result.success) {
+          closeModal('addPlantModal');
+          showAlert('success', 'Tanaman berhasil ditambahkan!');
+          await fetchPlants();
+          // Select newly created plant
+          if (result.data) selectPlant(result.data);
+        } else {
+          showAlert('error', result.message || 'Gagal menambahkan tanaman');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+        showAlert('error', 'Terjadi kesalahan saat menghubungi server');
+      }
+    });
+
+    // Open Edit Plant Modal
+    window.openEditPlantModal = (id) => {
+      const plant = currentPlants.find(p => p.id === id);
+      if (!plant) return;
+
+      document.getElementById('editPlantId').value = plant.id;
+      document.getElementById('editPlantName').value = plant.name;
+      if (plant.tanggal) {
+        const d = new Date(plant.tanggal);
+        document.getElementById('editPlantTanggal').value = d.toISOString().split('T')[0];
+      }
+      openModal('editPlantModal');
+    };
+
+    // Submit Edit Plant
+    editPlantForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitEditPlantBtn');
+      const spinner = document.getElementById('submitEditPlantSpinner');
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      const id = document.getElementById('editPlantId').value;
+      const name = document.getElementById('editPlantName').value.trim();
+      const tanggal = document.getElementById('editPlantTanggal').value;
+
+      try {
+        const res = await fetch(`/api/plants/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, tanggal })
+        });
+        const result = await res.json();
+
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+
+        if (res.ok && result.success) {
+          closeModal('editPlantModal');
+          showAlert('success', 'Data tanaman berhasil diperbarui!');
+          await fetchPlants();
+        } else {
+          showAlert('error', result.error || result.message || 'Gagal memperbarui tanaman');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+        showAlert('error', 'Terjadi kesalahan saat menghubungi server');
+      }
+    });
+
+    // Delete Plant
+    window.handleDeletePlant = async (id, name) => {
+      if (!confirm(`Apakah Anda yakin ingin menghapus tanaman "${name}"? Seluruh riwayat catatan jurnal dan fotonya akan ikut terhapus.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/plants/${id}`, {
+          method: 'DELETE'
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          showAlert('success', 'Tanaman berhasil dihapus!');
+          if (selectedPlant && selectedPlant.id === id) {
+            selectedPlant = null;
+          }
+          await fetchPlants();
+        } else {
+          showAlert('error', result.error || result.message || 'Gagal menghapus tanaman');
+        }
+      } catch (err) {
+        showAlert('error', 'Terjadi kesalahan saat menghubungi server');
+      }
+    };
+
+    // Refresh button
+    refreshPlantsBtn.addEventListener('click', fetchPlants);
+
+    // ==========================================
+    // PLANT LOGS OPERATIONS
+    // ==========================================
+
+    // Fetch Logs for selected plant
+    async function fetchPlantLogs(plantId) {
+      logsLoading.classList.remove('hidden');
+      logsEmpty.classList.add('hidden');
+      logsList.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/plants/${plantId}/logs`);
+        const result = await res.json();
+
+        logsLoading.classList.add('hidden');
+        if (result.success && Array.isArray(result.data)) {
+          currentLogs = result.data;
+          logsCountBadge.textContent = `${currentLogs.length} catatan`;
+
+          if (currentLogs.length === 0) {
+            logsEmpty.classList.remove('hidden');
+          } else {
+            renderLogsList();
+          }
+        } else {
+          showAlert('error', result.error || 'Gagal memuat catatan jurnal tanaman');
+        }
+      } catch (err) {
+        logsLoading.classList.add('hidden');
+        console.error(err);
+        showAlert('error', 'Koneksi ke server gagal saat memuat catatan jurnal.');
+      }
+    }
+
+    // Render Logs List
+    function renderLogsList() {
+      logsList.innerHTML = '';
+      currentLogs.forEach(log => {
+        const card = document.createElement('div');
+        card.className = 'rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3 hover:border-zinc-700/80 transition';
+
+        const createdAtStr = log.created_at ? new Date(log.created_at).toLocaleString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '-';
+
+        let fotoHtml = '';
+        if (log.foto) {
+          fotoHtml = `
+            <div class="mt-2.5">
+              <div 
+                onclick="window.viewImage('${log.foto}')"
+                class="relative group/img inline-block cursor-pointer overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-950 shadow-md"
+              >
+                <img src="${log.foto}" alt="Foto Log" class="h-32 w-48 object-cover transition duration-300 group-hover/img:scale-105" onerror="this.parentElement.style.display='none'">
+                <div class="absolute inset-0 bg-zinc-950/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition text-white text-xs font-medium gap-1">
+                  <i data-lucide="zoom-in" class="h-4 w-4"></i> Perbesar
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="rounded-md bg-zinc-800 px-2 py-0.5 text-[10px] font-mono font-medium text-zinc-400">
+                Log #${log.id}
+              </span>
+              <span class="text-xs text-zinc-400 flex items-center gap-1">
+                <i data-lucide="clock" class="h-3 w-3 text-zinc-500"></i>
+                ${createdAtStr}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <button
+                onclick="window.openEditLogModal(${log.id})"
+                title="Edit Catatan"
+                class="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+              >
+                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+              </button>
+              <button
+                onclick="window.handleDeleteLog(${log.id})"
+                title="Hapus Catatan"
+                class="p-1 rounded-md text-zinc-400 hover:text-rose-400 hover:bg-rose-950/40 transition"
+              >
+                <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <p class="text-xs sm:text-sm text-zinc-200 whitespace-pre-line leading-relaxed">
+            ${escapeHtml(log.catatan)}
+          </p>
+
+          ${fotoHtml}
+        `;
+
+        logsList.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Toggle Add Log Card
+    openAddLogBtn.addEventListener('click', () => {
+      addLogCard.classList.remove('hidden');
+      document.getElementById('addLogCatatan').focus();
+    });
+    closeAddLogBtn.addEventListener('click', () => {
+      addLogCard.classList.add('hidden');
+    });
+
+    // File Preview for Add Log
+    addLogFoto.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          addLogFotoPreview.src = evt.target.result;
+          addLogFotoPreviewWrapper.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        addLogFotoPreviewWrapper.classList.add('hidden');
+      }
+    });
+
+    // Submit Add Log (FormData with File Upload)
+    addLogForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedPlant) return;
+
+      const submitBtn = document.getElementById('submitAddLogBtn');
+      const spinner = document.getElementById('submitAddLogSpinner');
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      const catatan = document.getElementById('addLogCatatan').value.trim();
+      const fotoFile = addLogFoto.files[0];
+
+      const formData = new FormData();
+      formData.append('catatan', catatan);
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      try {
+        const res = await fetch(`/api/plants/${selectedPlant.id}/logs`, {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+
+        if (res.ok && result.success) {
+          addLogForm.reset();
+          addLogFotoPreviewWrapper.classList.add('hidden');
+          addLogCard.classList.add('hidden');
+          showAlert('success', 'Catatan jurnal & foto berhasil ditambahkan!');
+          await fetchPlantLogs(selectedPlant.id);
+        } else {
+          showAlert('error', result.message || result.error || 'Gagal menambahkan catatan jurnal');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+        showAlert('error', 'Terjadi kesalahan saat mengunggah catatan log');
+      }
+    });
+
+    // Open Edit Log Modal
+    window.openEditLogModal = (logId) => {
+      const log = currentLogs.find(l => l.id === logId);
+      if (!log) return;
+
+      document.getElementById('editLogId').value = log.id;
+      document.getElementById('editLogCatatan').value = log.catatan;
+      document.getElementById('editLogFoto').value = '';
+
+      if (log.foto) {
+        editLogFotoPreview.src = log.foto;
+        editLogFotoPreviewWrapper.classList.remove('hidden');
+      } else {
+        editLogFotoPreviewWrapper.classList.add('hidden');
+      }
+
+      openModal('editLogModal');
+    };
+
+    // File Preview for Edit Log
+    editLogFoto.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          editLogFotoPreview.src = evt.target.result;
+          editLogFotoPreviewWrapper.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Submit Edit Log (FormData)
+    editLogForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitEditLogBtn');
+      const spinner = document.getElementById('submitEditLogSpinner');
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      const logId = document.getElementById('editLogId').value;
+      const catatan = document.getElementById('editLogCatatan').value.trim();
+      const fotoFile = editLogFoto.files[0];
+
+      const formData = new FormData();
+      formData.append('catatan', catatan);
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      try {
+        const res = await fetch(`/api/plants/logs/${logId}`, {
+          method: 'PUT',
+          body: formData
+        });
+        const result = await res.json();
+
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+
+        if (res.ok && result.success) {
+          closeModal('editLogModal');
+          showAlert('success', 'Catatan jurnal berhasil diperbarui!');
+          if (selectedPlant) {
+            await fetchPlantLogs(selectedPlant.id);
+          }
+        } else {
+          showAlert('error', result.message || result.error || 'Gagal memperbarui catatan log');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+        showAlert('error', 'Terjadi kesalahan saat memperbarui catatan log');
+      }
+    });
+
+    // Delete Log
+    window.handleDeleteLog = async (logId) => {
+      if (!confirm('Apakah Anda yakin ingin menghapus catatan jurnal ini?')) return;
+
+      try {
+        const res = await fetch(`/api/plants/logs/${logId}`, {
+          method: 'DELETE'
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          showAlert('success', 'Catatan jurnal berhasil dihapus!');
+          if (selectedPlant) {
+            await fetchPlantLogs(selectedPlant.id);
+          }
+        } else {
+          showAlert('error', result.error || result.message || 'Gagal menghapus catatan jurnal');
+        }
+      } catch (err) {
+        showAlert('error', 'Terjadi kesalahan saat menghapus catatan log');
+      }
+    };
+
+    // Helper: Escape HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Init App
     loadCurrentUser();
+    fetchPlants();
   </script>
 </body>
 </html>
-
