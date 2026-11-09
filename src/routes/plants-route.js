@@ -5,6 +5,12 @@ export const plantsRoute = new Elysia({ prefix: "/api/plants" })
   .onError(({ code, error, set }) => {
     if (code === "VALIDATION") {
       set.status = 400;
+      if (error.type === "params") {
+        return {
+          success: false,
+          message: "Validasi gagal: parameter ID tidak valid",
+        };
+      }
       return {
         success: false,
         message: "Validasi gagal: nama dan tanggal wajib diisi",
@@ -110,15 +116,19 @@ export const plantsRoute = new Elysia({ prefix: "/api/plants" })
         }),
       }),
       body: t.Object({
-        name: t.String({
-          minLength: 1,
-          maxLength: 255,
-          description: "Nama baru tanaman",
-        }),
-        tanggal: t.String({
-          minLength: 1,
-          description: "Tanggal baru penanaman / tracking",
-        }),
+        name: t.Optional(
+          t.String({
+            minLength: 1,
+            maxLength: 255,
+            description: "Nama baru tanaman",
+          })
+        ),
+        tanggal: t.Optional(
+          t.String({
+            minLength: 1,
+            description: "Tanggal baru penanaman / tracking",
+          })
+        ),
       }),
     }
   )
