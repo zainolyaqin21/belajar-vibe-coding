@@ -1,6 +1,7 @@
 import { db } from "../db/index.js";
 import { users, sessions } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { AppError } from "../utils/app-error.js";
 
 /**
  * Mencari user berdasarkan alamat email
@@ -29,9 +30,7 @@ export async function registerUser({ name, email, password }) {
   // 1. Cek duplikasi email
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
-    const error = new Error("Email sudah digunakan");
-    error.statusCode = 409;
-    throw error;
+    throw new AppError("Email sudah digunakan", 409);
   }
 
   // 2. Hash password menggunakan bcrypt
@@ -47,19 +46,24 @@ export async function registerUser({ name, email, password }) {
     password: hashedPassword,
   });
 
-  // 4. Ambil record user yang baru dibuat tanpa menyertakan password
+  // 4. Ambil record user yang baru dibuat tanpa password
   const [newUser] = await db
     .select({
       id: users.id,
       name: users.name,
       email: users.email,
-      time: users.time,
+      createdAt: users.createdAt,
     })
     .from(users)
     .where(eq(users.id, result.insertId))
     .limit(1);
 
-  return newUser;
+  return {
+    id: newUser.id,
+    name: newUser.name,
+    email: newUser.email,
+    created_at: newUser.createdAt,
+  };
 }
 
 /**
@@ -73,17 +77,13 @@ export async function loginUser({ email, password }) {
   // 1. Cari user berdasarkan email
   const user = await findUserByEmail(email.trim().toLowerCase());
   if (!user) {
-    const error = new Error("Email atau password salah");
-    error.statusCode = 401;
-    throw error;
+    throw new AppError("Email atau password salah", 401);
   }
 
   // 2. Verifikasi password dengan hash bcrypt
   const isPasswordValid = await Bun.password.verify(password, user.password);
   if (!isPasswordValid) {
-    const error = new Error("Email atau password salah");
-    error.statusCode = 401;
-    throw error;
+    throw new AppError("Email atau password salah", 401);
   }
 
   // 3. Generate token UUID unik
@@ -99,48 +99,37 @@ export async function loginUser({ email, password }) {
 }
 
 /**
- * Mengambil data user yang sedang login berdasarkan token session
+ * Mengambil data user yang sedang login berdasarkan token session menggunakan Drizzle JOIN tunggal
  * @param {string} token - Token UUID dari session
  * @returns {Promise<object>}
  */
 export async function getCurrentUser(token) {
-  // 1. Cari token di tabel sessions
-  const [session] = await db
-    .select()
-    .from(sessions)
-    .where(eq(sessions.token, token))
-    .limit(1);
-
-  if (!session) {
-    const error = new Error("Unauthorized");
-    error.statusCode = 401;
-    throw error;
+  if (!token || typeof token !== "string") {
+    throw new AppError("Unauthorized", 401);
   }
 
-  // 2. Ambil data user yang berelasi
-  const [user] = await db
+  // Menggabungkan query sessions & users menjadi single JOIN query untuk efisiensi
+  const [result] = await db
     .select({
       id: users.id,
       name: users.name,
       email: users.email,
-      time: users.time,
+      createdAt: users.createdAt,
     })
-    .from(users)
-    .where(eq(users.id, session.userId))
+    .from(sessions)
+    .innerJoin(users, eq(sessions.userId, users.id))
+    .where(eq(sessions.token, token))
     .limit(1);
 
-  if (!user) {
-    const error = new Error("Unauthorized");
-    error.statusCode = 401;
-    throw error;
+  if (!result) {
+    throw new AppError("Unauthorized", 401);
   }
 
-  // 3. Return data sesuai format kontrak (petakan time -> created_at)
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    created_at: user.time,
+    id: result.id,
+    name: result.name,
+    email: result.email,
+    created_at: result.createdAt,
   };
 }
 
@@ -150,20 +139,19 @@ export async function getCurrentUser(token) {
  * @returns {Promise<void>}
  */
 export async function logoutUser(token) {
-  // 1. Cek apakah session ada di database
+  if (!token || typeof token !== "string") {
+    throw new AppError("Unauthorized", 401);
+  }
+
   const [session] = await db
-    .select()
+    .select({ id: sessions.id })
     .from(sessions)
     .where(eq(sessions.token, token))
     .limit(1);
 
   if (!session) {
-    const error = new Error("unauthorized");
-    error.statusCode = 401;
-    throw error;
+    throw new AppError("Unauthorized", 401);
   }
 
-  // 2. Hapus session dari database
   await db.delete(sessions).where(eq(sessions.token, token));
 }
-

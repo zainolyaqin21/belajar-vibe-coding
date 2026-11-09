@@ -5,7 +5,7 @@ export const users = mysqlTable("users", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
-  time: timestamp("time").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const sessions = mysqlTable("sessions", {
@@ -19,9 +19,13 @@ export const sessions = mysqlTable("sessions", {
 
 export const plants = mysqlTable("plants", {
   id: serial("id").primaryKey(),
+  userId: bigint("user_id", { mode: "number", unsigned: true })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
   tanggal: datetime("tanggal").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
 
 export const plantLogs = mysqlTable("plant_logs", {
@@ -32,4 +36,5 @@ export const plantLogs = mysqlTable("plant_logs", {
   catatan: text("catatan").notNull(),
   foto: varchar("foto", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });

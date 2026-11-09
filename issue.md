@@ -1,180 +1,169 @@
-﻿# [Epic/Bugfix & Feature] Debugging & Penyempurnaan Modul AgriTracker: Upload Foto Log, CRUD Tanaman & Log Tanaman, serta Integrasi Dashboard
+﻿# [Improvement] Code Review & Refactoring AgriTracker Backend
 
-## 📋 Deskripsi Proyek
-Modul **AgriTracker (Jurnal Pertumbuhan Tanaman)** dirancang untuk membantu pengguna mencatat dan memantau perkembangan tanaman beserta riwayat foto dan catatan hariannya.
+## 📋 Deskripsi
 
-Berdasarkan hasil pengujian terbaru, ditemukan beberapa kendala teknis dan fitur yang belum lengkap:
-1. **Upload Foto Log Tanaman**: Fitur upload foto pada log tanaman belum berfungsi karena backend saat ini hanya menerima data string/URL (bukan multipart form-data/file biner), dan belum ada penanganan penyimpanan file foto ke penyimpanan lokal server.
-2. **Fitur Update & Delete Tanaman**: Pengguna belum dapat mengubah (*update*) maupun menghapus (*delete*) data tanaman melalui antarmuka dashboard, serta route/service terkait perlu dipastikan keandalan penanganan status kode dan validasinya.
-3. **Fitur Update & Delete Log Tanaman**: Pengguna belum dapat mengedit atau menghapus riwayat catatan jurnal tanaman yang sudah dibuat.
-4. **Integrasi Antarmuka (Dashboard)**: Berkas `public/dashboard.html` saat ini baru menampilkan informasi profil user dan belum menyediakan antarmuka CRUD untuk tanaman maupun jurnal log tanaman.
-
-Dokumen ini disusun sebagai panduan *high-level planning & architecture* untuk diimplementasikan oleh junior programmer atau AI model dengan mengikuti konvensi *clean architecture* yang sudah berjalan pada proyek.
+Setelah melakukan review menyeluruh terhadap seluruh codebase AgriTracker (branch `feature/dashboard-crud-upload`), ditemukan sejumlah masalah yang perlu diperbaiki sebelum merge ke `main`. Seluruh perbaikan ini telah selesai diimplementasikan pada branch `feature/code-review-improvements` dan diverifikasi dengan unit test otomatis.
 
 ---
 
-## 🗄️ Konteks Database (Drizzle ORM)
+## 🗄️ Konteks Database
 
-Pastikan dan periksa struktur tabel pada `src/db/schema.js`:
-
-### 1. Tabel `plants`
-* **Kolom**:
-  * `id`: Serial / BigInt (Primary Key, Auto Increment)
-  * `name`: Varchar(255), Not Null (Nama tanaman)
-  * `tanggal`: Datetime, Not Null (Tanggal mulai tanam)
-  * `createdAt`: Timestamp, Default Now
-* **Operasi**: Mendukung `INSERT`, `SELECT`, `UPDATE`, dan `DELETE`.
-
-### 2. Tabel `plant_logs`
-* **Kolom**:
-  * `id`: Serial / BigInt (Primary Key, Auto Increment)
-  * `plantId`: BigInt (Foreign Key mengarah ke `plants.id` dengan referensi `onDelete: "cascade"`)
-  * `catatan`: Text, Not Null (Isi catatan perkembangan)
-  * `foto`: Varchar(255), Nullable (Menyimpan path / URL relatif gambar yang di-upload, misal: `/uploads/plant-1-1715000000.jpg`)
-  * `createdAt`: Timestamp, Default Now
-* **Integritas Relasi**:
-  * Ketika record tanaman pada tabel `plants` dihapus, seluruh data riwayat log terkait di tabel `plant_logs` harus otomatis terhapus (*cascading delete*).
-
-> **Catatan**: Tidak perlu membuat tabel baru di luar skema yang sudah ada. Cukup pastikan definisi dan relasi Drizzle ORM sesuai dengan kebutuhan di atas.
+- **Database:** MySQL (MariaDB 10.4.32) via XAMPP pada port 3306
+- **Database name:** `belajar_vibe_coding`
+- **ORM:** Drizzle ORM
+- **Schema file:** `src/db/schema.js`
+- **Tabel yang terlibat:** `users`, `sessions`, `plants`, `plant_logs`
 
 ---
 
-## 🔍 Temuan Masalah & Ruang Lingkup Debugging
+## 🔍 Temuan Masalah & Status Penyelesaian
 
-### 1. Masalah Upload Foto pada Plant Log
-* **Kondisi Saat Ini**:
-  Skema validasi route saat ini menggunakan `t.String()` untuk field `foto` dalam body JSON murni. Hal ini menyebabkan pengiriman file biner gambar (`multipart/form-data`) dari form upload ditolak atau gagal diproses.
-* **Solusi yang Diharapkan**:
-  * Route harus mendukung penerimaan file biner (menggunakan `t.File()` pada TypeBox Elysia) atau `multipart/form-data`.
-  * Buat mekanisme penyimpanan file: simpan berkas fisik ke direktori `public/uploads/` (pastikan folder otomatis dibuat jika belum ada) dengan nama file yang unik (misal: kombinasi timestamp dan nama file acak/sanitasi).
-  * Simpan path relatif publik (misal: `/uploads/nama-file.jpg`) ke kolom `foto` di tabel `plant_logs`.
-  * Direktori `public/` sudah di-serve sebagai aset statis oleh Elysia melalui plugin `@elysiajs/static`, sehingga file dapat langsung diakses melalui browser.
+### 🔴 Keamanan (Security) — Prioritas Tinggi
 
-### 2. Fitur Update & Delete Tanaman
-* **Kondisi Saat Ini**:
-  Fungsi dasar backend sudah memiliki rancangan di `plants-service.js` dan `plants-route.js`, namun pada antarmuka dashboard belum ada tombol/modal untuk melakukan aksi update dan delete, serta response validasi parameter ID URL perlu distandarkan.
-* **Solusi yang Diharapkan**:
-  * Pastikan endpoint `PUT /api/plants/:id` dan `DELETE /api/plants/:id` berjalan sesuai kontrak (validasi numeric ID, HTTP 200, 400, dan 404).
-  * Sediakan UI pada `dashboard.html` untuk memicu aksi edit (mengubah nama dan tanggal) dan hapus (dengan dialog konfirmasi) data tanaman.
+- [x] **Tidak ada autentikasi pada route plants dan plant-logs**
+  - File: `src/routes/plants-route.js`, `src/routes/plant-logs-route.js`
+  - Telah ditambahkan `authPlugin` dan `extractBearerToken` di `src/middlewares/auth-middleware.js`
+  - Semua endpoint plants dan logs kini memverifikasi Bearer token (401 Unauthorized jika tidak ada/tidak valid).
 
-### 3. Fitur Update & Delete Log Tanaman
-* **Kondisi Saat Ini**:
-  Endpoint `PUT /api/plants/logs/:logId` dan `DELETE /api/plants/logs/:logId` belum terhubung ke antarmuka pengguna, dan penanganan update foto pada log perlu diselaraskan dengan mekanisme upload.
-* **Solusi yang Diharapkan**:
-  * Pastikan route dan service update & delete log bekerja presisi.
-  * Sediakan UI pada `dashboard.html` untuk mengedit catatan log dan menghapus catatan log yang tidak diinginkan.
+- [x] **Tidak ada batas ukuran file pada upload foto**
+  - File: `src/utils/upload-helper.js`, fungsi `processPhotoUpload()`
+  - Telah ditambahkan validasi ukuran berkas maksimal 5MB (400 Bad Request jika melebihi).
+
+- [x] **Validasi tipe file hanya cek ekstensi, bukan MIME type asli**
+  - File: `src/utils/upload-helper.js`
+  - Telah ditambahkan inspeksi magic bytes (JPEG, PNG, GIF, WEBP) untuk mencegah spoofing file ekstensi palsu.
+
+- [x] **Foto lama tidak dihapus saat log diupdate dengan foto baru**
+  - File: `src/utils/upload-helper.js` (`deleteUploadedPhoto()`) & `src/services/plant-logs-service.js`
+  - Berkas fisik di `public/uploads/` otomatis dihapus saat foto diupdate atau saat log/tanaman dihapus.
 
 ---
 
-## 🎯 Spesifikasi API (HTTP Contract)
+### 🟠 Arsitektur — Prioritas Menengah
 
-### 🌿 Modul Tanaman (`/api/plants`)
+- [x] **Hapus file duplikat / dead code**
+  - Telah dihapus: `src/services/user.service.js` dan `src/routes/user.route.js`.
+  - Import di `src/index.js` diperbarui agar bersih dan terpusat.
 
-| Method | Path | Request Body / Param | Response Sukses | Response Error |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/plants` | - | `200 OK`: `{"success": true, "data": [...]}` | `500`: Gagal ambil data |
-| `POST` | `/api/plants` | JSON: `{ "name": string, "tanggal": string }` | `201 Created`: `{"success": true, "message": "...", "data": {...}}` | `400`: Validasi input |
-| `PUT` | `/api/plants/:id` | Param: `id` (Number)<br>JSON: `{ "name"?: string, "tanggal"?: string }` | `200 OK`: `{"success": true, "message": "Tanaman berhasil diperbarui", "data": {...}}` | `404`: Tanaman tidak ditemukan<br>`400`: ID/body tidak valid |
-| `DELETE` | `/api/plants/:id` | Param: `id` (Number) | `200 OK`: `{"success": true, "message": "Tanaman berhasil dihapus"}` | `404`: Tanaman tidak ditemukan<br>`400`: ID tidak valid |
+- [x] **Gabungkan dua handler register yang identik**
+  - File: `src/routes/users-route.js`
+  - Telah dihapus `POST /api/users/` yang menduplikasi `POST /api/users/register`.
 
----
+- [x] **Gabungkan dua route logout yang identik**
+  - File: `src/index.js` dan `src/routes/users-route.js`
+  - `DELETE /api/users/logout` kini menjadi rute tunggal terstandarisasi.
 
-### 📝 Modul Jurnal Log Tanaman (`/api/plants`)
+- [x] **Pindahkan `processPhotoUpload()` ke modul utility/service**
+  - Logika penyimpanan file telah dipindahkan ke `src/utils/upload-helper.js`.
 
-| Method | Path | Request Type & Body | Response Sukses | Response Error |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/plants/:id/logs` | Param: `id` (Plant ID) | `200 OK`: `{"success": true, "data": [...]}` | `404`: Tanaman tidak ditemukan |
-| `POST` | `/api/plants/:id/logs` | Param: `id` (Plant ID)<br>`multipart/form-data`: <br>- `catatan`: string (wajib)<br>- `foto`: file binary (opsional) | `201 Created`: `{"success": true, "message": "Catatan jurnal berhasil ditambahkan", "data": {...}}` | `404`: Tanaman tidak ditemukan<br>`400`: Catatan kosong/file tidak valid |
-| `PUT` | `/api/plants/logs/:logId` | Param: `logId` (Number)<br>`multipart/form-data` atau JSON:<br>- `catatan`?: string<br>- `foto`?: file binary atau path | `200 OK`: `{"success": true, "message": "Catatan jurnal berhasil diperbarui", "data": {...}}` | `404`: Catatan jurnal tidak ditemukan<br>`400`: Data tidak valid |
-| `DELETE` | `/api/plants/logs/:logId` | Param: `logId` (Number) | `200 OK`: `{"success": true, "message": "Catatan jurnal berhasil dihapus"}` | `404`: Catatan jurnal tidak ditemukan<br>`400`: ID tidak valid |
+- [x] **Buat centralized error class `AppError`**
+  - Telah dibuat `src/utils/app-error.js` dengan class `AppError` yang mendukung custom `statusCode`.
 
 ---
 
-## 🏗️ Alur Bisnis & Panduan Arsitektur per Layer
+### 🟡 Database & Schema
 
-### 1. Services Layer (`src/services/`)
-* **`plants-service.js` (atau `.ts`)**:
-  * `getAllPlants()`: Query `SELECT` semua baris tabel `plants`.
-  * `createPlant({ name, tanggal })`: Validasi, simpan record baru dengan `db.insert()`, dan kembalikan data record.
-  * `updatePlant(id, { name, tanggal })`: Cek eksistensi record (lempar 404 jika tidak ada), lakukan query `db.update()`, dan kembalikan record terbaru.
-  * `deletePlant(id)`: Cek eksistensi record (lempar 404 jika tidak ada), jalankan query `db.delete(plants).where(eq(plants.id, id))`.
-* **`plant-logs-service.js` (atau `.ts`)**:
-  * `createLog(plantId, { catatan, fotoPath })`: Pastikan tanaman ada; simpan log baru ke tabel `plant_logs` beserta path foto jika ada.
-  * `getLogsByPlantId(plantId)`: Pastikan tanaman ada; ambil daftar log diurutkan berdasarkan tanggal terbaru.
-  * `updateLog(logId, { catatan, fotoPath })`: Cek keberadaan log; lakukan update record.
-  * `deleteLog(logId)`: Cek keberadaan log; hapus record log dari database.
+- [x] **Rename kolom `time` → `created_at` di tabel `users`**
+  - File: `src/db/schema.js` & migrasi database
+  - Kolom `users.time` berhasil di-rename menjadi `users.created_at`.
 
-### 2. Routes Layer (`src/routes/`)
-* **`plants-route.js` (atau `.ts`)**:
-  * Mendaftarkan handler HTTP: `GET /`, `POST /`, `PUT /:id`, dan `DELETE /:id`.
-  * Validasi parameter menggunakan TypeBox (`t.Object({ id: t.Numeric() })`).
-  * Penanganan error terstandar:
-    * Parameter ID bukan angka ➡️ `400 Bad Request` (`{"success": false, "message": "Validasi gagal: parameter ID tidak valid"}`).
-    * Record tidak ditemukan ➡️ `404 Not Found` (`{"success": false, "error": "Tanaman tidak ditemukan"}`).
-* **`plant-logs-route.js` (atau `.ts`)**:
-  * Menangani upload file foto secara aman pada pembuatan/pembaruan log:
-    * Validasi tipe file (misal: image/jpeg, image/png, image/webp).
-    * Simpan file menggunakan utilitas I/O Bun (`Bun.write(...)`) ke dalam folder `public/uploads/`.
-    * Teruskan URL relatif (`/uploads/filename.ext`) ke service layer.
-  * Mendaftarkan route update (`PUT /:logId`) dan delete (`DELETE /:logId`) dengan validasi parameter `logId`.
+- [x] **Tambahkan foreign key `userId` ke tabel `plants`**
+  - File: `src/db/schema.js`
+  - Kolom `user_id` ditambahkan dengan FK ke `users.id` (`onDelete: "cascade"`). Multi-tenancy telah diterapkan pada seluruh query tanaman.
 
-### 3. Frontend Layer (`public/dashboard.html`)
-* **Bagian Tanaman (Plants Management)**:
-  * Tampilkan daftar tanaman dalam kartu/tabel.
-  * Tombol aksi **Edit Tanaman**: Membuka modal/form untuk mengubah nama dan tanggal tanaman, lalu memanggil `PUT /api/plants/:id`.
-  * Tombol aksi **Hapus Tanaman**: Konfirmasi konfirmasi sebelum memanggil `DELETE /api/plants/:id`, kemudian segarkan daftar.
-* **Bagian Jurnal Log (Plant Logs Management)**:
-  * Saat satu tanaman dipilih/diklik, tampilkan daftar riwayat log tanaman tersebut.
-  * Form **Tambah Catatan Jurnal**:
-    * Input textarea untuk catatan.
-    * Input file `<input type="file" accept="image/*">` untuk memilih foto tanaman.
-    * Kirimkan menggunakan objek `FormData` via `fetch('/api/plants/:id/logs', { method: 'POST', body: formData })`.
-  * Tampilkan thumbnail foto pada riwayat log jika ada foto yang di-upload.
-  * Tombol aksi **Edit Log** & **Hapus Log**:
-    * Edit: Mengubah isi catatan log via `PUT /api/plants/logs/:logId`.
-    * Hapus: Menghapus catatan log via `DELETE /api/plants/logs/:logId`.
+- [x] **Tambahkan kolom `updated_at` di tabel `plants` dan `plant_logs`**
+  - Kolom `updated_at` dengan `ON UPDATE CURRENT_TIMESTAMP` telah aktif pada tabel `plants` dan `plant_logs`.
+
+- [x] **Tambahkan endpoint yang hilang**
+  - Ditambahkan: `GET /api/plants/:id` untuk mengambil satu tanaman berdasarkan ID milik user.
+  - Ditambahkan: `GET /api/plants/logs/:logId` untuk mengambil satu catatan jurnal berdasarkan ID milik user.
 
 ---
 
-## 📁 Struktur Folder & Berkas Target
+### 🟢 Performa
 
-```text
-src/
-├── db/
-│   ├── index.js                  # Koneksi database MySQL dengan Drizzle ORM
-│   └── schema.js                 # Skema tabel plants & plant_logs
-├── routes/
-│   ├── plants-route.js           # Route Elysia untuk CRUD tanaman (/api/plants)
-│   └── plant-logs-route.js       # Route Elysia untuk log & upload foto (/api/plants/:id/logs & /api/plants/logs/:logId)
-├── services/
-│   ├── plants-service.js         # Logika bisnis Drizzle ORM untuk tanaman (CRUD)
-│   └── plant-logs-service.js     # Logika bisnis Drizzle ORM untuk log tanaman (CRUD)
-└── index.js                      # Entry point Elysia server & static plugin
+- [x] **Tambahkan `.limit(1)` pada `checkPlantExists()`**
+  - File: `src/services/plant-logs-service.js`
+  - Query pengecekan eksistensi kini menggunakan `.limit(1)`.
 
-public/
-├── dashboard.html                # Antarmuka dashboard pengguna (CRUD Tanaman & Log + Upload Foto)
-└── uploads/                      # Direktori penyimpanan fisik file foto yang di-upload
-```
+- [x] **Tambahkan pagination pada endpoint list**
+  - File: `src/routes/plants-route.js`, `src/routes/plant-logs-route.js`
+  - Query parameter `?page=1&limit=10` didukung dengan kalkulasi `limit`, `offset`, dan metadata total count.
+
+- [x] **Tambahkan pengurutan pada query logs**
+  - File: `src/services/plant-logs-service.js`, fungsi `getLogsByPlantId()`
+  - Log otomatis diurutkan secara menurun berdasarkan tanggal dibuat (`.orderBy(desc(plantLogs.createdAt))`).
+
+- [x] **Gunakan JOIN di `getCurrentUser()`**
+  - File: `src/services/users-service.js`
+  - Dua query terpisah digabungkan menjadi satu query dengan Drizzle `innerJoin(users, eq(sessions.userId, users.id))`.
 
 ---
 
-## ✅ Kriteria Penerimaan (Acceptance Criteria)
+### 🔵 Konsistensi Kode
 
-- [ ] **Upload Foto Berfungsi**: Pengguna dapat mengunggah file gambar (JPEG, PNG, WEBP) saat membuat atau mengedit catatan jurnal log, dan file tersimpan di `public/uploads/` serta dapat dibuka melalui browser.
-- [ ] **Update Tanaman Berfungsi**: Endpoint `PUT /api/plants/:id` berhasil memperbarui data tanaman, dan tersedia antarmuka edit di dashboard.
-- [ ] **Delete Tanaman Berfungsi**: Endpoint `DELETE /api/plants/:id` berhasil menghapus data tanaman dari database beserta seluruh catatan log terkait (*cascade*), dan tersedia tombol hapus di dashboard.
-- [ ] **Update Log Tanaman Berfungsi**: Endpoint `PUT /api/plants/logs/:logId` berhasil memperbarui catatan log tanaman, dan tersedia aksi edit di dashboard.
-- [ ] **Delete Log Tanaman Berfungsi**: Endpoint `DELETE /api/plants/logs/:logId` berhasil menghapus catatan log tanaman dari database, dan tersedia aksi hapus di dashboard.
-- [ ] **Database Integrity**: Skema database Drizzle ORM di `src/db/schema.js` menampung kolom dan relasi `plants` serta `plant_logs` dengan tepat tanpa kehilangan data.
-- [ ] **Separation of Concerns**: Logika database murni berada di layer *services*, penanganan HTTP/validasi di layer *routes*, dan antarmuka di `public/dashboard.html`.
-- [ ] **Error Handling**: Menghasilkan respon HTTP yang tepat (200/201 untuk sukses, 400 untuk validasi gagal, 404 jika ID tidak ditemukan).
+- [x] **Guard kondisi `updateData` kosong di `updatePlant()` dan `updateLog()`**
+  - Mengembalikan `400 Bad Request` ("Tidak ada data yang diperbarui") jika payload tidak memiliki field yang diperbarui.
+
+- [x] **Unifikasi shape response error**
+  - Format respon seragam: `{ success: false, message: "...", error: "..." }`.
+
+- [x] **Perjelas response login**
+  - Mengembalikan `{ success: true, message: "Login berhasil", data: token, token: token }` yang fleksibel dan backward-compatible.
 
 ---
 
-## 💡 Catatan Tambahan untuk Implementor
+## 🎯 Spesifikasi per Layer
 
-* **File Storage**: Pastikan membuat direktori `public/uploads/` secara otomatis (`fs.mkdirSync` atau `mkdir` rekursif) jika belum ada saat proses upload pertama kali berlangsung.
-* **Multipart Form-Data di Elysia**: Saat menerima upload file di ElysiaJS, gunakan skema `t.File()` atau ekstrak data melalui `await request.formData()` / context `body`.
-* **Static Asset Path**: Karena plugin `@elysiajs/static` menyajikan direktori `public` pada root URL, file yang disimpan di `public/uploads/sample.jpg` dapat diakses langsung oleh client di URL path `/uploads/sample.jpg`.
-* **Backward Compatibility**: Jaga agar alias rute yang sudah ada tidak mematahkan fungsionalitas lain.
+### Routes (`src/routes/`)
 
+| File | Aksi |
+|---|---|
+| `plants-route.js` | Ditambahkan auth middleware, endpoint GET /:id, pagination, guard empty payload |
+| `plant-logs-route.js` | Ditambahkan auth middleware, endpoint GET /logs/:logId, pagination, delegasi upload ke upload-helper |
+| `users-route.js` | Dihapus handler register duplikat, rute logout tunggal, penanganan error seragam |
+| `user.route.js` | **Dihapus (Dead Code)** |
+
+### Services (`src/services/`)
+
+| File | Aksi |
+|---|---|
+| `plants-service.js` | Multi-tenancy filter `userId`, guard empty payload, `getPlantById()`, cascade photo cleanup |
+| `plant-logs-service.js` | Multi-tenancy filter `userId`, `.limit(1)` di `checkPlantExists`, `ORDER BY`, `getLogById()`, pembersihan foto lama |
+| `users-service.js` | Single JOIN query di `getCurrentUser()`, refactor ke `AppError` |
+| `user.service.js` | **Dihapus (Dead Code)** |
+
+### Database (`src/db/`)
+
+| File | Aksi |
+|---|---|
+| `schema.js` | Rename `time` → `created_at` di users, tambah `userId` FK & `updatedAt` di plants, tambah `updatedAt` di plant_logs |
+
+### Utils (`src/utils/`)
+
+| File | Aksi |
+|---|---|
+| `app-error.js` | Centralized `AppError` class |
+| `upload-helper.js` | Validasi ukuran (5MB), validasi magic bytes foto, penyimpanan berkas, dan penghapusan foto lama |
+
+### Middlewares (`src/middlewares/`)
+
+| File | Aksi |
+|---|---|
+| `auth-middleware.js` | `extractBearerToken` & `authPlugin` Elysia derive hook |
+
+---
+
+## ✅ Kriteria Penerimaan
+
+- [x] Semua endpoint plants dan plant-logs menolak request tanpa token Bearer (401 Unauthorized)
+- [x] Upload foto dibatasi maksimum ukuran (5MB) dan MIME type divalidasi (bukan hanya ekstensi)
+- [x] Foto lama dihapus dari disk saat log diupdate dengan foto baru
+- [x] Tidak ada file duplikat (`user.route.js`, `user.service.js`, handler register/logout ganda)
+- [x] `GET /api/plants/:id` dan `GET /api/plants/logs/:logId` berfungsi dan mengembalikan data yang benar
+- [x] Kolom `time` pada tabel `users` sudah berubah menjadi `created_at` tanpa memutus fungsionalitas yang ada
+- [x] Tabel `plants` memiliki kolom `userId` dan query sudah difilter per user
+- [x] `updatePlant()` dan `updateLog()` mengembalikan error 400 jika payload kosong
+- [x] Semua response error memiliki shape yang seragam: `{ success: false, message: "..." }`
+- [x] `checkPlantExists()` menggunakan `.limit(1)`
+- [x] List endpoint plants dan logs mendukung pagination via query param `?page` dan `?limit`

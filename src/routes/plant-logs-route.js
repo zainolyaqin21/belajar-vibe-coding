@@ -1,52 +1,15 @@
 import { Elysia, t } from "elysia";
-import { mkdir } from "node:fs/promises";
-import { join, extname } from "node:path";
 import {
   createLog,
   getLogsByPlantId,
+  getLogById,
   updateLog,
   deleteLog,
 } from "../services/plant-logs-service.js";
+import { authPlugin } from "../middlewares/auth-middleware.js";
+import { processPhotoUpload } from "../utils/upload-helper.js";
 
-/**
- * Menyimpan berkas foto upload ke direktori public/uploads
- * @param {File|Blob|string|null|undefined} foto
- * @returns {Promise<string|null>} Path relatif URL foto atau null
- */
-async function processPhotoUpload(foto) {
-  if (!foto) return null;
-
-  // Jika input berupa string path/URL
-  if (typeof foto === "string") {
-    const trimmed = foto.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-
-  // Jika input berupa berkas File / Blob dari FormData
-  if (typeof foto === "object" && typeof foto.arrayBuffer === "function") {
-    if (foto.size === 0) return null;
-
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
-    const originalName = foto.name || "plant.jpg";
-    const ext = extname(originalName) || ".jpg";
-    const safeExt = [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext.toLowerCase())
-      ? ext.toLowerCase()
-      : ".jpg";
-    const uniqueName = `log_${Date.now()}_${Math.random().toString(36).substring(2, 9)}${safeExt}`;
-    const targetPath = join(uploadDir, uniqueName);
-
-    const buffer = await foto.arrayBuffer();
-    await Bun.write(targetPath, buffer);
-
-    return `/uploads/${uniqueName}`;
-  }
-
-  return null;
-}
-
-// Router untuk POST /api/plants/:id/logs dan GET /api/plants/:id/logs
+// Router untuk /api/plants/:id/logs
 const plantLogsRoute = new Elysia({ prefix: "/api/plants" })
   .onError(({ code, error, set }) => {
     if (code === "VALIDATION") {
@@ -55,11 +18,13 @@ const plantLogsRoute = new Elysia({ prefix: "/api/plants" })
         return {
           success: false,
           message: "Validasi gagal: parameter ID tidak valid",
+          error: "Validasi gagal: parameter ID tidak valid",
         };
       }
       return {
         success: false,
         message: "Validasi gagal: data catatan jurnal tidak valid atau tidak lengkap",
+        error: "Validasi gagal",
         details: error.validator?.Errors
           ? [...error.validator.Errors(error.value)].map((e) => e.message)
           : error.message,
@@ -70,44 +35,36 @@ const plantLogsRoute = new Elysia({ prefix: "/api/plants" })
     return {
       success: false,
       message: error.message || "Terjadi kesalahan pada server",
+      error: error.message || "Terjadi kesalahan pada server",
     };
   })
+  .use(authPlugin)
 
   // POST /api/plants/:id/logs — Tambah catatan log baru
   .post(
     "/:id/logs",
-    async ({ params, body, set }) => {
+    async ({ user, params, body, set }) => {
       try {
         const plantId = Number(params.id);
         const fotoPath = body.foto ? await processPhotoUpload(body.foto) : null;
 
-        const newLog = await createLog(plantId, {
+        const newLog = await createLog(plantId, user.id, {
           catatan: body.catatan,
           foto: fotoPath,
         });
-
-        if (newLog === null) {
-          set.status = 404;
-          return { success: false, error: "Tanaman tidak ditemukan" };
-        }
 
         set.status = 201;
         return {
           success: true,
           message: "Catatan jurnal berhasil ditambahkan",
-          data: {
-            id: newLog.id,
-            plant_id: newLog.plantId,
-            catatan: newLog.catatan,
-            foto: newLog.foto,
-            created_at: newLog.createdAt,
-          },
+          data: newLog,
         };
       } catch (err) {
         set.status = err.statusCode || 500;
         return {
           success: false,
           message: err.message || "Gagal menambahkan catatan jurnal",
+          error: err.message || "Gagal menambahkan catatan jurnal",
         };
       }
     },
@@ -123,40 +80,48 @@ const plantLogsRoute = new Elysia({ prefix: "/api/plants" })
   // GET /api/plants/:id/logs — Ambil semua log per tanaman
   .get(
     "/:id/logs",
-    async ({ params, set }) => {
+    async ({ user, params, query, set }) => {
       try {
         const plantId = Number(params.id);
-        const logs = await getLogsByPlantId(plantId);
+        const page = query?.page ? Number(query.page) : undefined;
+        const limit = query?.limit ? Number(query.limit) : undefined;
 
-        if (logs === null) {
-          set.status = 404;
-          return { success: false, error: "Tanaman tidak ditemukan" };
+        const result = await getLogsByPlantId(plantId, user.id, { page, limit });
+
+        set.status = 200;
+        if (result && !Array.isArray(result) && result.pagination) {
+          return {
+            success: true,
+            data: result.data,
+            pagination: result.pagination,
+          };
         }
 
         return {
           success: true,
-          data: logs.map((log) => ({
-            id: log.id,
-            plant_id: log.plantId,
-            catatan: log.catatan,
-            foto: log.foto,
-            created_at: log.createdAt,
-          })),
+          data: result,
         };
       } catch (err) {
         set.status = err.statusCode || 500;
         return {
           success: false,
           message: err.message || "Gagal mengambil data catatan jurnal",
+          error: err.message || "Gagal mengambil data catatan jurnal",
         };
       }
     },
     {
       params: t.Object({ id: t.Numeric() }),
+      query: t.Optional(
+        t.Object({
+          page: t.Optional(t.Numeric()),
+          limit: t.Optional(t.Numeric()),
+        })
+      ),
     }
   );
 
-// Router terpisah untuk PUT /api/plants/logs/:logId dan DELETE /api/plants/logs/:logId
+// Router untuk /api/plants/logs/:logId (GET, PUT, DELETE)
 const plantLogsCrudRoute = new Elysia({ prefix: "/api/plants/logs" })
   .onError(({ code, error, set }) => {
     if (code === "VALIDATION") {
@@ -165,11 +130,13 @@ const plantLogsCrudRoute = new Elysia({ prefix: "/api/plants/logs" })
         return {
           success: false,
           message: "Validasi gagal: parameter ID tidak valid",
+          error: "Validasi gagal: parameter ID tidak valid",
         };
       }
       return {
         success: false,
         message: "Validasi gagal: data catatan jurnal tidak valid atau tidak lengkap",
+        error: "Validasi gagal",
         details: error.validator?.Errors
           ? [...error.validator.Errors(error.value)].map((e) => e.message)
           : error.message,
@@ -180,13 +147,42 @@ const plantLogsCrudRoute = new Elysia({ prefix: "/api/plants/logs" })
     return {
       success: false,
       message: error.message || "Terjadi kesalahan pada server",
+      error: error.message || "Terjadi kesalahan pada server",
     };
   })
+  .use(authPlugin)
+
+  // GET /api/plants/logs/:logId — Ambil satu catatan log by ID
+  .get(
+    "/:logId",
+    async ({ user, params, set }) => {
+      try {
+        const logId = Number(params.logId);
+        const log = await getLogById(logId, user.id);
+
+        set.status = 200;
+        return {
+          success: true,
+          data: log,
+        };
+      } catch (err) {
+        set.status = err.statusCode || 500;
+        return {
+          success: false,
+          message: err.message || "Catatan jurnal tidak ditemukan",
+          error: err.message || "Catatan jurnal tidak ditemukan",
+        };
+      }
+    },
+    {
+      params: t.Object({ logId: t.Numeric() }),
+    }
+  )
 
   // PUT /api/plants/logs/:logId — Update catatan log
   .put(
     "/:logId",
-    async ({ params, body, set }) => {
+    async ({ user, params, body, set }) => {
       try {
         const logId = Number(params.logId);
         const updatePayload = {};
@@ -199,29 +195,20 @@ const plantLogsCrudRoute = new Elysia({ prefix: "/api/plants/logs" })
           updatePayload.foto = await processPhotoUpload(body.foto);
         }
 
-        const updated = await updateLog(logId, updatePayload);
+        const updated = await updateLog(logId, user.id, updatePayload);
 
-        if (updated === null) {
-          set.status = 404;
-          return { success: false, error: "Catatan jurnal tidak ditemukan" };
-        }
-
+        set.status = 200;
         return {
           success: true,
           message: "Catatan jurnal berhasil diperbarui",
-          data: {
-            id: updated.id,
-            plant_id: updated.plantId,
-            catatan: updated.catatan,
-            foto: updated.foto,
-            created_at: updated.createdAt,
-          },
+          data: updated,
         };
       } catch (err) {
         set.status = err.statusCode || 500;
         return {
           success: false,
           message: err.message || "Gagal memperbarui catatan jurnal",
+          error: err.message || "Gagal memperbarui catatan jurnal",
         };
       }
     },
@@ -237,16 +224,12 @@ const plantLogsCrudRoute = new Elysia({ prefix: "/api/plants/logs" })
   // DELETE /api/plants/logs/:logId — Hapus catatan log
   .delete(
     "/:logId",
-    async ({ params, set }) => {
+    async ({ user, params, set }) => {
       try {
         const logId = Number(params.logId);
-        const deleted = await deleteLog(logId);
+        await deleteLog(logId, user.id);
 
-        if (!deleted) {
-          set.status = 404;
-          return { success: false, error: "Catatan jurnal tidak ditemukan" };
-        }
-
+        set.status = 200;
         return {
           success: true,
           message: "Catatan jurnal berhasil dihapus",
@@ -256,6 +239,7 @@ const plantLogsCrudRoute = new Elysia({ prefix: "/api/plants/logs" })
         return {
           success: false,
           message: err.message || "Gagal menghapus catatan jurnal",
+          error: err.message || "Gagal menghapus catatan jurnal",
         };
       }
     },

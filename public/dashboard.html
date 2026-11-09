@@ -639,6 +639,16 @@
       lucide.createIcons();
     }
 
+    // Helper: Authenticated Fetch
+    function authFetch(url, options = {}) {
+      const authToken = localStorage.getItem('auth_token');
+      const headers = new Headers(options.headers || {});
+      if (authToken) {
+        headers.set('Authorization', `Bearer ${authToken}`);
+      }
+      return fetch(url, { ...options, headers });
+    }
+
     // Auth & Current User
     async function loadCurrentUser() {
       const authToken = localStorage.getItem('auth_token');
@@ -648,9 +658,7 @@
       }
 
       try {
-        const response = await fetch('/api/users/current', {
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        const response = await authFetch('/api/users/current');
 
         if (!response.ok) {
           localStorage.removeItem('auth_token');
@@ -699,7 +707,7 @@
       plantsList.innerHTML = '';
 
       try {
-        const res = await fetch('/api/plants');
+        const res = await authFetch('/api/plants');
         const result = await res.json();
 
         plantsLoading.classList.add('hidden');
@@ -828,7 +836,7 @@
       const tanggal = document.getElementById('addPlantTanggal').value;
 
       try {
-        const res = await fetch('/api/plants', {
+        const res = await authFetch('/api/plants', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, tanggal })
@@ -881,7 +889,7 @@
       const tanggal = document.getElementById('editPlantTanggal').value;
 
       try {
-        const res = await fetch(`/api/plants/${id}`, {
+        const res = await authFetch(`/api/plants/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, tanggal })
@@ -912,7 +920,7 @@
       }
 
       try {
-        const res = await fetch(`/api/plants/${id}`, {
+        const res = await authFetch(`/api/plants/${id}`, {
           method: 'DELETE'
         });
         const result = await res.json();
@@ -945,7 +953,7 @@
       logsList.innerHTML = '';
 
       try {
-        const res = await fetch(`/api/plants/${plantId}/logs`);
+        const res = await authFetch(`/api/plants/${plantId}/logs`);
         const result = await res.json();
 
         logsLoading.classList.add('hidden');
@@ -1087,7 +1095,7 @@
       }
 
       try {
-        const res = await fetch(`/api/plants/${selectedPlant.id}/logs`, {
+        const res = await authFetch(`/api/plants/${selectedPlant.id}/logs`, {
           method: 'POST',
           body: formData
         });
@@ -1163,7 +1171,7 @@
       }
 
       try {
-        const res = await fetch(`/api/plants/logs/${logId}`, {
+        const res = await authFetch(`/api/plants/logs/${logId}`, {
           method: 'PUT',
           body: formData
         });
@@ -1193,7 +1201,7 @@
       if (!confirm('Apakah Anda yakin ingin menghapus catatan jurnal ini?')) return;
 
       try {
-        const res = await fetch(`/api/plants/logs/${logId}`, {
+        const res = await authFetch(`/api/plants/logs/${logId}`, {
           method: 'DELETE'
         });
         const result = await res.json();
